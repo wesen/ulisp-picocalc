@@ -29,6 +29,8 @@ cp \
   "$SOURCE_DIR/ulisp_types.h" \
   "$SOURCE_DIR/ulisp_state.h" \
   "$SOURCE_DIR/ulisp_state.cpp" \
+  "$SOURCE_DIR/ulisp_messages.h" \
+  "$SOURCE_DIR/ulisp_messages.cpp" \
   "$SOURCE_DIR/ulisp_fwd_decls.h" \
   "$SOURCE_DIR/ulisp_entry.cpp" \
   "$SOURCE_DIR/ulisp_error.cpp" \

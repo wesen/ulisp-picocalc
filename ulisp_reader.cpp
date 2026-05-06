@@ -14,6 +14,7 @@
 
 #include "ulisp_config.h"
 #include "ulisp_types.h"
+#include "ulisp_messages.h"
 #include "ulisp_state.h"
 #include "ulisp_print.h"
 #include "ulisp_terminal.h"

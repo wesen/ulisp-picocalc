@@ -9,6 +9,7 @@
 
 #include "ulisp_config.h"
 #include "ulisp_types.h"
+#include "ulisp_messages.h"
 #include "ulisp_state.h"
 #include "ulisp_fwd_decls.h"
 
