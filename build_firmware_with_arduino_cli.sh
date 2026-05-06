@@ -36,6 +36,8 @@ cp \
   "$SOURCE_DIR/ulisp_persistence.cpp" \
   "$SOURCE_DIR/ulisp_streams.h" \
   "$SOURCE_DIR/ulisp_streams.cpp" \
+  "$SOURCE_DIR/ulisp_print.h" \
+  "$SOURCE_DIR/ulisp_print.cpp" \
   "$SOURCE_DIR/repl_window.h" \
   "$SOURCE_DIR/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \

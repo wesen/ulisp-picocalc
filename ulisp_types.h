@@ -98,7 +98,7 @@ typedef object *(*fn_ptr_type)(object *, object *);
 typedef void (*mapfun_t)(object *, object **);
 typedef int (*intfn_ptr_type)(int w, int x, int y, int z);
 
-typedef const struct {
+typedef const struct tbl_entry {
   const char *string;
   fn_ptr_type fptr;
   uint8_t minmax;
