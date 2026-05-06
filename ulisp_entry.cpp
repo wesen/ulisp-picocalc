@@ -12,20 +12,8 @@
 
 #include "ulisp_config.h"
 #include "ulisp_types.h"
+#include "ulisp_state.h"
 #include "repl_window.h"
-
-extern jmp_buf toplevel_handler;
-extern jmp_buf *handler;
-extern unsigned int Freespace;
-extern unsigned int TraceDepth[TRACEMAX];
-extern builtin_t Context;
-extern uint8_t TraceStart;
-extern uint8_t TraceTop;
-extern object *GlobalEnv;
-extern object *GCStack;
-extern uint8_t BreakLevel;
-extern flags_t Flags;
-extern object *tee;
 
 #if defined(sdcardsupport)
 extern File SDpfile;

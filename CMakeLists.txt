@@ -29,6 +29,8 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_SOURCE_DIR}/ulisp_core.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_config.h"
       "${ULISP_SOURCE_DIR}/ulisp_types.h"
+      "${ULISP_SOURCE_DIR}/ulisp_state.h"
+      "${ULISP_SOURCE_DIR}/ulisp_state.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_fwd_decls.h"
       "${ULISP_SOURCE_DIR}/ulisp_entry.cpp"
       "${ULISP_SOURCE_DIR}/repl_window.h"

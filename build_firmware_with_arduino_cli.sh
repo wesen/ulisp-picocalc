@@ -27,6 +27,8 @@ cp \
   "$SOURCE_DIR/ulisp_core.cpp" \
   "$SOURCE_DIR/ulisp_config.h" \
   "$SOURCE_DIR/ulisp_types.h" \
+  "$SOURCE_DIR/ulisp_state.h" \
+  "$SOURCE_DIR/ulisp_state.cpp" \
   "$SOURCE_DIR/ulisp_fwd_decls.h" \
   "$SOURCE_DIR/ulisp_entry.cpp" \
   "$SOURCE_DIR/repl_window.h" \
