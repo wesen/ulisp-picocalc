@@ -58,6 +58,8 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_SOURCE_DIR}/ulisp_arduino.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_picocalc.h"
       "${ULISP_SOURCE_DIR}/ulisp_picocalc.cpp"
+      "${ULISP_SOURCE_DIR}/ulisp_runtime.h"
+      "${ULISP_SOURCE_DIR}/ulisp_runtime.cpp"
       "${ULISP_SOURCE_DIR}/repl_window.h"
       "${ULISP_SOURCE_DIR}/repl_window.cpp"
       "${ULISP_SOURCE_DIR}/Setup60_RP2040_ILI9488.h"

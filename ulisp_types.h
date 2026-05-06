@@ -11,6 +11,7 @@
 
 #define nil                NULL
 #define atom(x)            (!consp(x))
+#define improperp(x)       (!listp(x))
 #define car(x)             (((object *) (x))->car)
 #define cdr(x)             (((object *) (x))->cdr)
 
