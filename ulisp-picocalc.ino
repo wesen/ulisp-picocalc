@@ -7732,7 +7732,9 @@ void repl (object *env) {
       pfstring(" : ", pserial);
       pint(BreakLevel, pserial);
     }
+    ReplSetPromptStyle();
     pserial('>'); pserial(' ');
+    ReplSetOutputStyle();
     Context = NIL;
     object *line = readmain(gserial);
     #if defined(CPU_NRF52840)
@@ -7756,10 +7758,10 @@ void repl (object *env) {
     pfl(pserial);
     line = eval(line, env);
     pfl(pserial);
+    ReplSetOutputStyle();
     printobject(line, pserial);
     unprotect();
     pfl(pserial);
-    pln(pserial);
     ReplRenderIfDirty();
   }
 }

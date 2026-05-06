@@ -170,6 +170,30 @@ void ReplResetDrawState() {
   replDrawState.bold = false;
 }
 
+void ReplSetOutputStyle() {
+  replDrawState.fg = 1;   // soft white
+  replDrawState.bg = 0;   // black
+  replDrawState.bold = false;
+}
+
+void ReplSetPromptStyle() {
+  replDrawState.fg = 4;   // neon cyan
+  replDrawState.bg = 0;
+  replDrawState.bold = true;
+}
+
+void ReplSetInputStyle() {
+  replDrawState.fg = 3;   // neon green
+  replDrawState.bg = 0;
+  replDrawState.bold = false;
+}
+
+void ReplSetErrorStyle() {
+  replDrawState.fg = 2;   // neon pink
+  replDrawState.bg = 0;
+  replDrawState.bold = true;
+}
+
 void ReplWindowInit() {
   for (int r = 0; r < ReplBackBufferRows; r++) replClearBackRow(r);
   replBack.currentRow = 0;
@@ -225,11 +249,12 @@ void ReplEditMoveLeft() { if (replEdit.cursor > 0) replEdit.cursor--; }
 void ReplEditMoveRight() { if (replEdit.cursor < replEdit.len) replEdit.cursor++; }
 
 void ReplEditCommit() {
-  // Append prompt + input to transcript
-  ReplBackBufferAppend('>');
-  ReplBackBufferAppend(' ');
+  // The REPL loop already printed the prompt into the transcript.  On commit,
+  // append only the edited input text, in input color, then terminate the line.
+  ReplSetInputStyle();
   for (uint16_t i = 0; i < replEdit.len; i++) ReplBackBufferAppend(replEdit.text[i]);
   ReplBackBufferAppend('\n');
+  ReplSetOutputStyle();
   // Mark committed for gserial consumption
   replEdit.committed = true;
   replEdit.readPos = 0;
