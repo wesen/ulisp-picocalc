@@ -10,7 +10,10 @@
 #include "ulisp_config.h"
 #include "ulisp_types.h"
 #include "ulisp_state.h"
-#include "ulisp_fwd_decls.h"
+#include "ulisp_print.h"
+#include "ulisp_runtime.h"
+#include "ulisp_memory.h"
+#include "ulisp_error.h"
 
 // Error handling
 

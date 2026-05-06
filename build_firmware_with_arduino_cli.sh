@@ -33,7 +33,9 @@ cp \
   "$SOURCE_DIR/ulisp_messages.cpp" \
   "$SOURCE_DIR/ulisp_fwd_decls.h" \
   "$SOURCE_DIR/ulisp_entry.cpp" \
+  "$SOURCE_DIR/ulisp_error.h" \
   "$SOURCE_DIR/ulisp_error.cpp" \
+  "$SOURCE_DIR/ulisp_memory.h" \
   "$SOURCE_DIR/ulisp_memory.cpp" \
   "$SOURCE_DIR/ulisp_persistence.cpp" \
   "$SOURCE_DIR/ulisp_streams.h" \
