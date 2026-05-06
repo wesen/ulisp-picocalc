@@ -42,6 +42,10 @@ cp \
   "$SOURCE_DIR/ulisp_platform.cpp" \
   "$SOURCE_DIR/ulisp_pretty.h" \
   "$SOURCE_DIR/ulisp_pretty.cpp" \
+  "$SOURCE_DIR/ulisp_terminal.h" \
+  "$SOURCE_DIR/ulisp_terminal.cpp" \
+  "$SOURCE_DIR/ulisp_reader.h" \
+  "$SOURCE_DIR/ulisp_reader.cpp" \
   "$SOURCE_DIR/repl_window.h" \
   "$SOURCE_DIR/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
