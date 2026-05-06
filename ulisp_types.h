@@ -115,7 +115,7 @@ typedef void (*pfun_t)(char);
 typedef pfun_t (*pstream_ptr_t)(uint8_t address);
 typedef gfun_t (*gstream_ptr_t)(uint8_t address);
 
-typedef const struct {
+typedef const struct stream_entry {
   const char *streamname;
   pstream_ptr_t pfunptr;
   gstream_ptr_t gfunptr;

@@ -36,6 +36,8 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_SOURCE_DIR}/ulisp_error.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_memory.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_persistence.cpp"
+      "${ULISP_SOURCE_DIR}/ulisp_streams.h"
+      "${ULISP_SOURCE_DIR}/ulisp_streams.cpp"
       "${ULISP_SOURCE_DIR}/repl_window.h"
       "${ULISP_SOURCE_DIR}/repl_window.cpp"
       "${ULISP_SOURCE_DIR}/Setup60_RP2040_ILI9488.h"
