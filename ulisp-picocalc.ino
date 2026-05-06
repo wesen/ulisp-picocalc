@@ -49,6 +49,7 @@ PCKeyboard pc_kbd;
 #define Serial Serial1     // Comment out to use the Raspberry Pi Pico micro USB port
 const int KEY_ESC = 0xB1;
 TFT_eSPI tft = TFT_eSPI(320,320);
+#include "repl_window.h"
 #include "hardware/pwm.h"
 #define AUDIO_PIN_L 26
 #define AUDIO_PIN_R 27
@@ -65,7 +66,7 @@ TFT_eSPI tft = TFT_eSPI(320,320);
 // RP2040 boards ***************************************************************
 
 #if defined(ARDUINO_RASPBERRY_PI_PICO)
-  #define WORKSPACESIZE (23000-SDSIZE)    /* Objects (8*bytes) */
+  #define WORKSPACESIZE (18000-SDSIZE)    /* Objects (8*bytes) — reduced to leave RAM for REPL window */
   #define CODESIZE 256                    /* Bytes */
   #define STACKDIFF 320
   #define CPU_RP2040
@@ -6975,7 +6976,7 @@ object *eval (object *form, object *env) {
 
 void pserial (char c) {
   LastPrint = c;
-  if (!tstflag(NOECHO)) Display(c);         // Don't display when paste in listing
+  if (!tstflag(NOECHO)) ReplBackBufferAppend(c);
   #if defined (serialmonitor)
   if (c == '\n') Serial.write('\r');
   Serial.write(c);
@@ -7464,48 +7465,46 @@ void gserial_flush () {
 int gserial () {
   #if defined (serialmonitor)
   unsigned long start = millis();
-  while (!KybdAvailable) {
+  while (true) {
     if (millis() - start > 1000) clrflag(NOECHO);
     if (Serial.available()) {
       char temp = Serial.read();
       if (temp != '\n' && !tstflag(NOECHO)) Serial.print(temp);
       return temp;
-    } else {
-      // PicoCalc keyboard
-      if (pc_kbd.keyCount() > 0) {
-        const PCKeyboard::KeyEvent key = pc_kbd.keyEvent();
-        if (key.state == PCKeyboard::StatePress) {
-          char temp = key.key;
-          if (temp == '\t') autoComplete();
-          else if ((temp != 0) && (temp != 255) && (temp != 0xA1) && (temp != 0xA2) && (temp != 0xA3) && (temp != 0xA4) && (temp != 0xA5)) {
-            ProcessKey(temp); reset_autocomplete = true;
-          }
-        }
-      }
     }
-  }
-  if (ReadPtr != WritePtr) return KybdBuf[ReadPtr++];
-  KybdAvailable = 0;
-  WritePtr = 0;
-  return '\n';
-  #else
-  while (!KybdAvailable) {
-    // PicoCalc keyboard
+    // PicoCalc keyboard -> edit buffer
     if (pc_kbd.keyCount() > 0) {
       const PCKeyboard::KeyEvent key = pc_kbd.keyEvent();
       if (key.state == PCKeyboard::StatePress) {
-        char temp = key.key;
-        if (temp == '\t') autoComplete();
-        else if ((temp != 0) && (temp != 255) && (temp != 0xA1) && (temp != 0xA2) && (temp != 0xA3) && (temp != 0xA4) && (temp != 0xA5)) {
-          ProcessKey(temp); reset_autocomplete = true;
-        }
+        uint8_t temp = static_cast<uint8_t>(key.key);
+        if (temp == KEY_ESC) setflag(ESCAPE);
+        else ReplProcessKey(temp);
       }
     }
+    if (replEdit.committed) {
+      if (replEdit.readPos < replEdit.len) return replEdit.text[replEdit.readPos++];
+      ReplEditReset();
+      return '\n';
+    }
+    if (replUiDirty) ReplRenderIfDirty();
   }
-  if (ReadPtr != WritePtr) return KybdBuf[ReadPtr++];
-  KybdAvailable = 0;
-  WritePtr = 0;
-  return '\n';
+  #else
+  while (true) {
+    if (pc_kbd.keyCount() > 0) {
+      const PCKeyboard::KeyEvent key = pc_kbd.keyEvent();
+      if (key.state == PCKeyboard::StatePress) {
+        uint8_t temp = static_cast<uint8_t>(key.key);
+        if (temp == KEY_ESC) setflag(ESCAPE);
+        else ReplProcessKey(temp);
+      }
+    }
+    if (replEdit.committed) {
+      if (replEdit.readPos < replEdit.len) return replEdit.text[replEdit.readPos++];
+      ReplEditReset();
+      return '\n';
+    }
+    if (replUiDirty) ReplRenderIfDirty();
+  }
   #endif
 }
 
@@ -7715,6 +7714,7 @@ void setup () {
   initenv();
   initsleep();
   initgfx();
+  ReplWindowInit();
   initkybd();
   pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
 }
@@ -7732,7 +7732,9 @@ void repl (object *env) {
       pfstring(" : ", pserial);
       pint(BreakLevel, pserial);
     }
+    ReplSetPromptStyle();
     pserial('>'); pserial(' ');
+    ReplSetOutputStyle();
     Context = NIL;
     object *line = readmain(gserial);
     #if defined(CPU_NRF52840)
@@ -7756,10 +7758,11 @@ void repl (object *env) {
     pfl(pserial);
     line = eval(line, env);
     pfl(pserial);
+    ReplSetOutputStyle();
     printobject(line, pserial);
     unprotect();
     pfl(pserial);
-    pln(pserial);
+    ReplRenderIfDirty();
   }
 }
 
