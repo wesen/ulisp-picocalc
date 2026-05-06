@@ -31,7 +31,7 @@ cp \
   "$SOURCE_DIR/ulisp_state.cpp" \
   "$SOURCE_DIR/ulisp_messages.h" \
   "$SOURCE_DIR/ulisp_messages.cpp" \
-  "$SOURCE_DIR/ulisp_fwd_decls.h" \
+  "$SOURCE_DIR/ulisp_entry.h" \
   "$SOURCE_DIR/ulisp_entry.cpp" \
   "$SOURCE_DIR/ulisp_error.h" \
   "$SOURCE_DIR/ulisp_error.cpp" \
@@ -58,6 +58,7 @@ cp \
   "$SOURCE_DIR/ulisp_gfx.cpp" \
   "$SOURCE_DIR/ulisp_arduino.h" \
   "$SOURCE_DIR/ulisp_arduino.cpp" \
+  "$SOURCE_DIR/ulisp_persistence.h" \
   "$SOURCE_DIR/ulisp_picocalc.h" \
   "$SOURCE_DIR/ulisp_picocalc.cpp" \
   "$SOURCE_DIR/ulisp_runtime.h" \

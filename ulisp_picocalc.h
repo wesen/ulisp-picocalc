@@ -10,8 +10,11 @@
 #endif
 
 char getKey();
+object *fn_getkey(object *args, object *env);
+object *fn_readpixel(object *args, object *env);
 void writeTwo(File SDfile, uint16_t word);
 void writeFour(File SDfile, uint32_t word);
 void savebmp(object *arg);
+object *fn_savebmp(object *args, object *env);
 
 #endif // ULISP_PICOCALC_H

@@ -23,6 +23,18 @@ void I2Cstop(TwoWire *port, uint8_t read);
 
 void serialbegin(int address, int baud);
 void serialend(int address);
+pfun_t pfun_i2c(uint8_t address);
+pfun_t pfun_spi(uint8_t address);
+pfun_t pfun_serial(uint8_t address);
+pfun_t pfun_string(uint8_t address);
+pfun_t pfun_sd(uint8_t address);
+pfun_t pfun_gfx(uint8_t address);
+pfun_t pfun_wifi(uint8_t address);
+gfun_t gfun_i2c(uint8_t address);
+gfun_t gfun_spi(uint8_t address);
+gfun_t gfun_serial(uint8_t address);
+gfun_t gfun_sd(uint8_t address);
+gfun_t gfun_wifi(uint8_t address);
 
 #if defined(gfxsupport)
 void gfxwrite(char c);

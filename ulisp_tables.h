@@ -14,5 +14,13 @@ builtin_t builtin(symbol_t name);
 bool builtinp(symbol_t name);
 int isbuiltin(object *x, builtin_t name);
 builtin_t lookupbuiltin(char *buffer);
+intptr_t lookupfn(builtin_t name);
+void checkminmax(builtin_t name, int nargs);
+char *lookupdoc(builtin_t name);
+bool findsubstring(char *part, builtin_t name);
+void testescape();
+bool colonp(symbol_t name);
+bool keywordp(object *obj);
+void backtrace(symbol_t name);
 
 #endif // ULISP_TABLES_H

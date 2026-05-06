@@ -11,6 +11,20 @@
 #include "ulisp_print.h"
 #include "ulisp_platform.h"
 #include "ulisp_terminal.h"
+#include "ulisp_error.h"
+#include "ulisp_memory.h"
+#include "ulisp_persistence.h"
+#include "ulisp_runtime.h"
+#include "ulisp_streams.h"
+#include "ulisp_pretty.h"
+#include "ulisp_tables.h"
+#include "ulisp_eval.h"
+#include "ulisp_reader.h"
+#include "ulisp_builtins.h"
+#include "ulisp_arduino.h"
+#include "ulisp_gfx.h"
+#include "ulisp_picocalc.h"
+#include "ulisp_entry.h"
 
 extern TFT_eSPI tft;
 extern PCKeyboard pc_kbd;
@@ -18,8 +32,6 @@ extern const int COLOR_BLACK;
 extern const int COLOR_WHITE;
 extern const int KEY_ESC;
 
-const tbl_entry_t *table(int n);
-int tablesize(int n);
 
 // PicoCalc terminal and keyboard support
 

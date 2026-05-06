@@ -45,6 +45,10 @@ TFT_eSPI tft = TFT_eSPI(320,320);
 #include "ulisp_picocalc.h"
 #include "ulisp_runtime.h"
 #include "ulisp_builtins.h"
+#include "ulisp_error.h"
+#include "ulisp_memory.h"
+#include "ulisp_persistence.h"
+#include "ulisp_entry.h"
 
 // Global state moved to ulisp_state.cpp.
 

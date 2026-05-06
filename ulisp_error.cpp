@@ -14,6 +14,20 @@
 #include "ulisp_runtime.h"
 #include "ulisp_memory.h"
 #include "ulisp_error.h"
+#include "ulisp_messages.h"
+#include "ulisp_persistence.h"
+#include "ulisp_streams.h"
+#include "ulisp_platform.h"
+#include "ulisp_pretty.h"
+#include "ulisp_tables.h"
+#include "ulisp_eval.h"
+#include "ulisp_reader.h"
+#include "ulisp_terminal.h"
+#include "ulisp_builtins.h"
+#include "ulisp_arduino.h"
+#include "ulisp_gfx.h"
+#include "ulisp_picocalc.h"
+#include "ulisp_entry.h"
 
 // Error handling
 
