@@ -10,6 +10,7 @@
 // C Macros
 
 #define nil                NULL
+#define atom(x)            (!consp(x))
 #define car(x)             (((object *) (x))->car)
 #define cdr(x)             (((object *) (x))->cdr)
 

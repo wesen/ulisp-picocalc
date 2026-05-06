@@ -33,14 +33,13 @@ PCKeyboard pc_kbd;
 const int KEY_ESC = 0xB1;
 TFT_eSPI tft = TFT_eSPI(320,320);
 #include "repl_window.h"
-#include "hardware/pwm.h"
-#define AUDIO_PIN_L 26
-#define AUDIO_PIN_R 27
 
 #include "ulisp_types.h"
 #include "ulisp_state.h"
 #include "ulisp_streams.h"
 #include "ulisp_print.h"
+#include "ulisp_platform.h"
+#include "ulisp_pretty.h"
 
 #include "ulisp_fwd_decls.h"
 
@@ -69,7 +68,7 @@ extern const char invalidarg[] = "invalid argument";
 const char invalidkey[] = "invalid keyword";
 const char illegalclause[] = "illegal clause";
 const char illegalfn[] = "illegal function";
-const char invalidpin[] = "invalid pin";
+extern const char invalidpin[] = "invalid pin";
 const char oddargs[] = "odd number of arguments";
 const char indexrange[] = "index out of range";
 const char canttakecar[] = "can't take car";
@@ -117,8 +116,6 @@ bool consp (object *x) {
   unsigned int type = x->type;
   return type >= PAIR || type == ZZERO;
 }
-
-#define atom(x) (!consp(x))
 
 bool listp (object *x) {
   if (x == NULL) return true;
@@ -1172,177 +1169,9 @@ object *dobody (object *args, object *env, bool star) {
   return eval(tf_progn(results, env), env);
 }
 
-// I2C interface for up to two ports, using Arduino Wire
+// Platform I2C, pin checks, tone, and sleep helpers moved to ulisp_platform.cpp.
 
-void I2Cinit (TwoWire *port, bool enablePullup) {
-  (void) enablePullup;
-  port->begin();
-}
-
-// Stream adapters and dispatch moved to ulisp_streams.cpp.
-
-// Check pins - these are board-specific not processor-specific
-
-void checkanalogread (int pin) {
-#if defined(ARDUINO_RASPBERRY_PI_PICO) || defined(ARDUINO_RASPBERRY_PI_PICO_W) \
-  || defined(ARDUINO_RASPBERRY_PI_PICO_2) || defined(ARDUINO_RASPBERRY_PI_PICO_2W) \
-  || defined(ARDUINO_PIMORONI_PICO_PLUS_2)
-  if (!(pin>=26 && pin<=29)) error(invalidpin, number(pin));
-#endif
-}
-
-void checkanalogwrite (int pin) {
-#if defined(ARDUINO_RASPBERRY_PI_PICO) || defined(ARDUINO_RASPBERRY_PI_PICO_2) \
-  || defined(ARDUINO_PIMORONI_PICO_PLUS_2)
-  if (!(pin>=0 && pin<=29)) error(invalidpin, number(pin));
-#elif defined(ARDUINO_RASPBERRY_PI_PICO_W) || defined(ARDUINO_RASPBERRY_PI_PICO_2W)
-  if (!((pin>=0 && pin<=29) || pin == 32)) error(invalidpin, number(pin));
-#endif
-}
-
-// Note
-
-void play_tone (uint freq) { // duty_c between 0..10000
-    gpio_set_function(AUDIO_PIN_L, GPIO_FUNC_PWM);
-    gpio_set_function(AUDIO_PIN_R, GPIO_FUNC_PWM);
-    uint slice_l = pwm_gpio_to_slice_num(AUDIO_PIN_L);
-    uint slice_r = pwm_gpio_to_slice_num(AUDIO_PIN_R);
-    pwm_config config = pwm_get_default_config();
-    float div = (float)clock_get_hz(clk_sys) / (freq * 10000);
-    pwm_config_set_clkdiv(&config, div);
-    pwm_config_set_wrap(&config, 10000); 
-    pwm_init(slice_l, &config, true); // start the pwm running according to the config
-    pwm_init(slice_r, &config, true);
-    pwm_set_gpio_level(AUDIO_PIN_L, 5000); //connect the pin to the pwm engine and set the duty cycle.
-    pwm_set_gpio_level(AUDIO_PIN_R, 5000);
-  };
-
-void play_tone_off() {
-    uint slice_l = pwm_gpio_to_slice_num(AUDIO_PIN_L);
-    uint slice_r = pwm_gpio_to_slice_num(AUDIO_PIN_R);
-    pwm_config config = pwm_get_default_config();
-    pwm_init(slice_l, &config, false);
-    pwm_init(slice_r, &config, false);
-};
-
-const int scale[] = {4186,4435,4699,4978,5274,5588,5920,6272,6645,7040,7459,7902};
-
-void playnote (int pin, int note, int octave) {
-  (void) pin;
-  int oct = octave + note/12;
-  int prescaler = 8 - oct;
-  if (prescaler<0 || prescaler>8) error("octave out of range", number(oct));
-  play_tone(scale[note%12]>>prescaler);
-}
-
-void nonote (int pin) {
-  (void) pin;
-  play_tone_off();
-}
-
-// Sleep
-
-void initsleep () { }
-
-void doze (int secs) {
-  delay(1000 * secs);
-}
-
-// Prettyprint
-
-const int PPINDENT = 2;
-const int PPWIDTH = 52;
-const int GFXPPWIDTH = 52; // 320 pixel wide screen
-int ppwidth = PPWIDTH;
-
-void pcount (char c) {
-  if (c == '\n') PrintCount++;
-  PrintCount++;
-}
-
-uint8_t atomwidth (object *obj) {
-  PrintCount = 0;
-  printobject(obj, pcount);
-  return PrintCount;
-}
-
-uint8_t basewidth (object *obj, uint8_t base) {
-  PrintCount = 0;
-  pintbase(obj->integer, base, pcount);
-  return PrintCount;
-}
-
-bool quoted (object *obj) {
-  return (consp(obj) && car(obj) != NULL && car(obj)->name == sym(QUOTE) && consp(cdr(obj)) && cddr(obj) == NULL);
-}
-
-int subwidth (object *obj, int w) {
-  if (atom(obj)) return w - atomwidth(obj);
-  if (quoted(obj)) obj = car(cdr(obj));
-  return subwidthlist(obj, w - 1);
-}
-
-int subwidthlist (object *form, int w) {
-  while (form != NULL && w >= 0) {
-    if (atom(form)) return w - (2 + atomwidth(form));
-    w = subwidth(car(form), w - 1);
-    form = cdr(form);
-  }
-  return w;
-}
-
-void superprint (object *form, int lm, pfun_t pfun) {
-  if (atom(form)) {
-    if (isbuiltin(form, NOTHING)) printsymbol(form, pfun);
-    else printobject(form, pfun);
-  } else if (quoted(form)) {
-    pfun('\'');
-    superprint(car(cdr(form)), lm + 1, pfun);
-  } else {
-    lm = lm + PPINDENT;
-    bool fits = (subwidth(form, ppwidth - lm - PPINDENT) >= 0);
-    int special = 0, extra = 0; bool separate = true;
-    object *arg = car(form);
-    if (symbolp(arg) && builtinp(arg->name)) {
-      uint8_t minmax = getminmax(builtin(arg->name));
-      if (minmax == 0327 || minmax == 0313) special = 2; // defun, setq, setf, defvar
-      else if (minmax == 0317 || minmax == 0017 || minmax == 0117 || minmax == 0123) special = 1;
-    }
-    while (form != NULL) {
-      if (atom(form)) { pfstring(" . ", pfun); printobject(form, pfun); pfun(')'); return; }
-      else if (separate) { 
-        pfun('(');
-        separate = false;
-      } else if (special) {
-        pfun(' ');
-        special--; 
-      } else if (fits) {
-        pfun(' ');
-      } else { pln(pfun); indent(lm, ' ', pfun); }
-      superprint(car(form), lm+extra, pfun);
-      form = cdr(form);
-    }
-    pfun(')');
-    testescape();
-  }
-}
-
-object *edit (object *fun) {
-  while (1) {
-    if (tstflag(EXITEDITOR)) return fun;
-    char c = gserial();
-    if (c == 'q') setflag(EXITEDITOR);
-    else if (c == 'b') return fun;
-    else if (c == 'r') fun = read(gserial);
-    else if (c == '\n') { pfl(pserial); superprint(fun, 0, pserial); pln(pserial); }
-    else if (c == 'c') fun = cons(read(gserial), fun);
-    else if (atom(fun)) pserial('!');
-    else if (c == 'd') fun = cons(car(fun), edit(cdr(fun)));
-    else if (c == 'a') fun = cons(edit(car(fun)), cdr(fun));
-    else if (c == 'x') fun = cdr(fun);
-    else pserial('?');
-  }
-}
+// Pretty printer and editor helpers moved to ulisp_pretty.cpp.
 
 // Assembler
 
