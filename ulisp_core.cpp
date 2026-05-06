@@ -442,7 +442,7 @@ object *symbol (symbol_t name) {
   return ptr;
 }
 
-inline object *bsymbol (builtin_t name) {
+object *bsymbol (builtin_t name) {
   return intern(twist(name+BUILTINS));
 }
 
@@ -7688,112 +7688,4 @@ object *read (gfun_t gfun) {
   return item;
 }
 
-// Setup
-
-void initenv () {
-  GlobalEnv = NULL;
-  tee = bsymbol(TEE);
-}
-
-void initgfx () {
-  #if defined(gfxsupport)
-  tft.init();
-  tft.writecommand(TFT_DISPOFF);
-  tft.invertDisplay(1);
-  tft.fillScreen(TFT_BLACK);
-  tft.writecommand(TFT_DISPON);
-  #endif
-}
-
-void setup () {
-  Serial.begin(9600);
-  int start = millis();
-  while ((millis() - start) < 5000) { if (Serial) break; }
-  #if defined(sdcardsupport)
-  pinMode(SDCARD_SS_PIN, OUTPUT);
-  digitalWrite(SDCARD_SS_PIN,1);
-  #endif
-  initworkspace();
-  initenv();
-  initsleep();
-  initgfx();
-  ReplWindowInit();
-  initkybd();
-  pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
-}
-
-// Read/Evaluate/Print loop
-
-void repl (object *env) {
-  for (;;) {
-    randomSeed(micros());
-    #if defined(printfreespace)
-    if (!tstflag(NOECHO)) gc(NULL, env);
-    pint(Freespace+1, pserial);
-    #endif
-    if (BreakLevel) {
-      pfstring(" : ", pserial);
-      pint(BreakLevel, pserial);
-    }
-    ReplSetPromptStyle();
-    pserial('>'); pserial(' ');
-    ReplSetOutputStyle();
-    Context = NIL;
-    object *line = readmain(gserial);
-    #if defined(CPU_NRF52840)
-    Serial.flush();
-    #endif
-    // Break handling
-    if (BreakLevel) {
-      if (line == nil || line == bsymbol(COLONC)) {
-        pln(pserial); return;
-      } else if (line == bsymbol(COLONA)) {
-        pln(pserial); pln(pserial);
-        GCStack = NULL;
-        longjmp(*handler, 1);
-      } else if (line == bsymbol(COLONB)) {
-        pln(pserial); printbacktrace();
-        line = bsymbol(NOTHING);
-      }
-    }
-    if (line == (object *)KET) error2("unmatched right bracket");
-    protect(line);
-    pfl(pserial);
-    line = eval(line, env);
-    pfl(pserial);
-    ReplSetOutputStyle();
-    printobject(line, pserial);
-    unprotect();
-    pfl(pserial);
-    ReplRenderIfDirty();
-  }
-}
-
-void loop () {
-  if (!setjmp(toplevel_handler)) {
-    #if defined(resetautorun)
-    volatile int autorun = 12; // Fudge to keep code size the same
-    #else
-    volatile int autorun = 13;
-    #endif
-    if (autorun == 12) autorunimage();
-  }
-  ulisperror();
-  repl(NULL);
-}
-
-void ulisperror () {
-  // Come here after error
-  delay(100); while (Serial.available()) Serial.read();
-  clrflag(NOESC); BreakLevel = 0; TraceStart = 0; TraceTop = 0;
-  for (int i=0; i<TRACEMAX; i++) TraceDepth[i] = 0;
-  #if defined(sdcardsupport)
-  SDpfile.close(); SDgfile.close();
-  #endif
-  #if defined(lisplibrary)
-  if (!tstflag(LIBRARYLOADED)) { setflag(LIBRARYLOADED); loadfromlibrary(NULL); }
-  #endif
-  #if defined(ULISP_WIFI)
-  client.stop();
-  #endif
-}
+// Entry points moved to ulisp_entry.cpp.

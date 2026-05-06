@@ -28,6 +28,7 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_BUILD_SCRIPT}"
       "${ULISP_SOURCE_DIR}/ulisp_core.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_fwd_decls.h"
+      "${ULISP_SOURCE_DIR}/ulisp_entry.cpp"
       "${ULISP_SOURCE_DIR}/repl_window.h"
       "${ULISP_SOURCE_DIR}/repl_window.cpp"
       "${ULISP_SOURCE_DIR}/Setup60_RP2040_ILI9488.h"
