@@ -60,6 +60,11 @@ cp \
   "$SOURCE_DIR/ulisp_runtime.cpp" \
   "$SOURCE_DIR/ulisp_builtins.h" \
   "$SOURCE_DIR/ulisp_builtins.cpp" \
+  "$SOURCE_DIR/ulisp_builtins_control.cpp" \
+  "$SOURCE_DIR/ulisp_builtins_core.cpp" \
+  "$SOURCE_DIR/ulisp_builtins_numbers.cpp" \
+  "$SOURCE_DIR/ulisp_builtins_strings.cpp" \
+  "$SOURCE_DIR/ulisp_builtins_system.cpp" \
   "$SOURCE_DIR/repl_window.h" \
   "$SOURCE_DIR/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
