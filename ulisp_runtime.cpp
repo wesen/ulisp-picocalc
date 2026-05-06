@@ -19,7 +19,6 @@
 #include "ulisp_tables.h"
 #include "ulisp_eval.h"
 #include "ulisp_runtime.h"
-#include "ulisp_fwd_decls.h"
 
 extern const char notanumber[];
 extern const char notaninteger[];

@@ -27,7 +27,6 @@
 #include "ulisp_reader.h"
 #include "ulisp_runtime.h"
 #include "ulisp_builtins.h"
-#include "ulisp_fwd_decls.h"
 
 extern const char notanumber[];
 extern const char notaninteger[];
