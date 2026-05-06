@@ -25,6 +25,7 @@ SKETCH_BASENAME=$(basename "$SKETCH_DIR")
 
 cp \
   "$SOURCE_DIR/ulisp_core.cpp" \
+  "$SOURCE_DIR/ulisp_config.h" \
   "$SOURCE_DIR/ulisp_fwd_decls.h" \
   "$SOURCE_DIR/ulisp_entry.cpp" \
   "$SOURCE_DIR/repl_window.h" \

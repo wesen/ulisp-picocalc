@@ -10,19 +10,8 @@
 #include <TFT_eSPI.h>
 #include <PCKeyboard.h>
 
+#include "ulisp_config.h"
 #include "repl_window.h"
-
-// Keep these compile-time feature switches in sync with ulisp_core.cpp while
-// the remaining monolithic core is being split into shared headers.
-#define printfreespace
-#define serialmonitor
-#define sdcardsupport
-#define gfxsupport
-#define assemblerlist
-
-#if defined(sdcardsupport)
-#define SDCARD_SS_PIN 17
-#endif
 
 #define nil NULL
 #define push(x, y)         ((y) = cons((x),(y)))

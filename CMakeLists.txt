@@ -27,6 +27,7 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
     DEPENDS
       "${ULISP_BUILD_SCRIPT}"
       "${ULISP_SOURCE_DIR}/ulisp_core.cpp"
+      "${ULISP_SOURCE_DIR}/ulisp_config.h"
       "${ULISP_SOURCE_DIR}/ulisp_fwd_decls.h"
       "${ULISP_SOURCE_DIR}/ulisp_entry.cpp"
       "${ULISP_SOURCE_DIR}/repl_window.h"
