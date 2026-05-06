@@ -105,13 +105,13 @@ struct ReplRenderCell {
 extern TFT_eSPI tft;
 extern PCKeyboard pc_kbd;
 
-ReplDrawState replDrawState;
-ReplBackBuffer replBack;
-ReplEditBuffer replEdit;
-ReplRenderCell replDesired[ReplLines][ReplColumns];
-ReplRenderCell replDrawn[ReplLines][ReplColumns];
-bool replDrawnValid = false;
-bool replUiDirty = true;
+extern ReplDrawState replDrawState;
+extern ReplBackBuffer replBack;
+extern ReplEditBuffer replEdit;
+extern ReplRenderCell replDesired[ReplLines][ReplColumns];
+extern ReplRenderCell replDrawn[ReplLines][ReplColumns];
+extern bool replDrawnValid;
+extern bool replUiDirty;
 
 // ---------------------------------------------------------------------------
 // Back buffer helpers
@@ -126,7 +126,7 @@ inline uint16_t replPhysicalForLogical(uint16_t logical) {
   return (replLogicalFirstRow() + logical) % ReplBackBufferRows;
 }
 
-void replClearBackRow(uint16_t row) {
+inline void replClearBackRow(uint16_t row) {
   for (int c = 0; c < ReplColumns; c++) {
     replBack.rows[row][c] = ' ';
     replBack.attrs[row][c] = ReplPackAttr(1, 0);
@@ -134,12 +134,12 @@ void replClearBackRow(uint16_t row) {
   }
 }
 
-void replScrollToTail() {
+inline void replScrollToTail() {
   if (replBack.count <= ReplTranscriptRows) replBack.viewportStart = 0;
   else replBack.viewportStart = replBack.count - ReplTranscriptRows;
 }
 
-void replAdvanceRow() {
+inline void replAdvanceRow() {
   replBack.currentRow = (replBack.currentRow + 1) % ReplBackBufferRows;
   replClearBackRow(replBack.currentRow);
   replBack.currentCol = 0;
@@ -147,7 +147,7 @@ void replAdvanceRow() {
   if (replBack.followTail) replScrollToTail();
 }
 
-void ReplBackBufferAppend(char c) {
+inline void ReplBackBufferAppend(char c) {
   if (c == '\r') return;
   if (c == '\n') { replAdvanceRow(); replUiDirty = true; return; }
   if ((static_cast<uint8_t>(c) & 0x7F) < 32) return;
@@ -160,41 +160,41 @@ void ReplBackBufferAppend(char c) {
   replUiDirty = true;
 }
 
-void ReplBackBufferWriteString(const char *s) {
+inline void ReplBackBufferWriteString(const char *s) {
   while (*s) ReplBackBufferAppend(*s++);
 }
 
-void ReplResetDrawState() {
+inline void ReplResetDrawState() {
   replDrawState.fg = 1;
   replDrawState.bg = 0;
   replDrawState.bold = false;
 }
 
-void ReplSetOutputStyle() {
+inline void ReplSetOutputStyle() {
   replDrawState.fg = 1;   // soft white
   replDrawState.bg = 0;   // black
   replDrawState.bold = false;
 }
 
-void ReplSetPromptStyle() {
+inline void ReplSetPromptStyle() {
   replDrawState.fg = 4;   // neon cyan
   replDrawState.bg = 0;
   replDrawState.bold = true;
 }
 
-void ReplSetInputStyle() {
+inline void ReplSetInputStyle() {
   replDrawState.fg = 3;   // neon green
   replDrawState.bg = 0;
   replDrawState.bold = false;
 }
 
-void ReplSetErrorStyle() {
+inline void ReplSetErrorStyle() {
   replDrawState.fg = 2;   // neon pink
   replDrawState.bg = 0;
   replDrawState.bold = true;
 }
 
-void ReplWindowInit() {
+inline void ReplWindowInit() {
   for (int r = 0; r < ReplBackBufferRows; r++) replClearBackRow(r);
   replBack.currentRow = 0;
   replBack.currentCol = 0;
@@ -214,7 +214,7 @@ void ReplWindowInit() {
 // Edit buffer helpers
 // ---------------------------------------------------------------------------
 
-void ReplEditReset() {
+inline void ReplEditReset() {
   replEdit.len = 0;
   replEdit.cursor = 0;
   replEdit.text[0] = '\0';
@@ -222,7 +222,7 @@ void ReplEditReset() {
   replEdit.readPos = 0;
 }
 
-bool ReplEditInsert(char c) {
+inline bool ReplEditInsert(char c) {
   if (replEdit.len >= ReplInputBufferSize - 1) return false;
   for (int i = replEdit.len; i > replEdit.cursor; i--) replEdit.text[i] = replEdit.text[i - 1];
   replEdit.text[replEdit.cursor++] = c;
@@ -230,7 +230,7 @@ bool ReplEditInsert(char c) {
   return true;
 }
 
-bool ReplEditBackspace() {
+inline bool ReplEditBackspace() {
   if (replEdit.cursor == 0) return false;
   for (int i = replEdit.cursor - 1; i < replEdit.len - 1; i++) replEdit.text[i] = replEdit.text[i + 1];
   replEdit.cursor--;
@@ -238,17 +238,17 @@ bool ReplEditBackspace() {
   return true;
 }
 
-bool ReplEditDelete() {
+inline bool ReplEditDelete() {
   if (replEdit.cursor >= replEdit.len) return false;
   for (int i = replEdit.cursor; i < replEdit.len - 1; i++) replEdit.text[i] = replEdit.text[i + 1];
   replEdit.text[--replEdit.len] = '\0';
   return true;
 }
 
-void ReplEditMoveLeft() { if (replEdit.cursor > 0) replEdit.cursor--; }
-void ReplEditMoveRight() { if (replEdit.cursor < replEdit.len) replEdit.cursor++; }
+inline void ReplEditMoveLeft() { if (replEdit.cursor > 0) replEdit.cursor--; }
+inline void ReplEditMoveRight() { if (replEdit.cursor < replEdit.len) replEdit.cursor++; }
 
-void ReplEditCommit() {
+inline void ReplEditCommit() {
   // The REPL loop already printed the prompt into the transcript.  On commit,
   // append only the edited input text, in input color, then terminate the line.
   ReplSetInputStyle();
@@ -285,17 +285,17 @@ inline void replSetDesired(int row, int col, char ch, uint8_t attr, bool bold) {
   replDesired[row][col].bold = bold;
 }
 
-void replClearDesired() {
+inline void replClearDesired() {
   for (int r = 0; r < ReplLines; r++)
     for (int c = 0; c < ReplColumns; c++)
       replSetDesired(r, c, ' ', ReplPackAttr(1, 0), false);
 }
 
-void replSetDesiredText(int row, int col, const char *text, uint8_t attr, bool bold) {
+inline void replSetDesiredText(int row, int col, const char *text, uint8_t attr, bool bold) {
   while (*text && col < ReplColumns) replSetDesired(row, col++, *text++, attr, bold);
 }
 
-void replDrawCell(int row, int col) {
+inline void replDrawCell(int row, int col) {
   int x = col * ReplCharWidth;
   int y = row * ReplLeading;
   uint16_t fg = replCellFg(row, col);
@@ -309,7 +309,7 @@ void replDrawCell(int row, int col) {
   }
 }
 
-void replComposeTranscript() {
+inline void replComposeTranscript() {
   for (int row = 0; row < ReplTranscriptRows; row++) {
     uint16_t logical = replBack.viewportStart + row;
     if (logical >= replBack.count) continue;
@@ -321,7 +321,7 @@ void replComposeTranscript() {
   }
 }
 
-void replComposeStatus() {
+inline void replComposeStatus() {
   int row = ReplTranscriptRows;
   uint8_t attr = ReplPackAttr(0, 11);
   for (int c = 0; c < ReplColumns; c++) replSetDesired(row, c, ' ', attr, false);
@@ -332,7 +332,7 @@ void replComposeStatus() {
   replSetDesiredText(row, 0, status, attr, false);
 }
 
-void replComposeInput() {
+inline void replComposeInput() {
   int firstRow = ReplTranscriptRows + ReplStatusRows;
   replSetDesiredText(firstRow, 0, "> ", ReplPackAttr(3, 0), false);
   int screenRow = firstRow;
@@ -355,7 +355,7 @@ void replComposeInput() {
   }
 }
 
-void ReplRenderAll() {
+inline void ReplRenderAll() {
   replClearDesired();
   replComposeTranscript();
   replComposeStatus();
@@ -380,7 +380,7 @@ inline void ReplRenderIfDirty() {
 // Keyboard processing
 // ---------------------------------------------------------------------------
 
-void ReplProcessKey(uint8_t key) {
+inline void ReplProcessKey(uint8_t key) {
   if (key == 0xB1) { // KEY_ESC
     // Handled by caller (setflag ESCAPE)
     return;
