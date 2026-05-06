@@ -11,64 +11,8 @@
 #include <PCKeyboard.h>
 
 #include "ulisp_config.h"
+#include "ulisp_types.h"
 #include "repl_window.h"
-
-#define nil NULL
-#define push(x, y)         ((y) = cons((x),(y)))
-#define pop(y)             ((y) = cdr(y))
-#define protect(y)         push((y), GCStack)
-#define unprotect()        pop(GCStack)
-#define setflag(x)         (Flags = Flags | 1<<(x))
-#define clrflag(x)         (Flags = Flags & ~(1<<(x)))
-#define tstflag(x)         (Flags & 1<<(x))
-
-constexpr int TRACEMAX = 3;
-
-typedef uint32_t symbol_t;
-typedef uint32_t builtin_t;
-typedef uint16_t flags_t;
-
-typedef struct sobject object;
-typedef int (*gfun_t)();
-typedef void (*pfun_t)(char);
-
-enum builtin_subset : builtin_t {
-  NIL = 0,
-  TEE = 1,
-  COLONA = 8,
-  COLONB = 9,
-  COLONC = 10,
-};
-
-enum flag_subset {
-  PRINTREADABLY,
-  RETURNFLAG,
-  ESCAPE,
-  EXITEDITOR,
-  LIBRARYLOADED,
-  NOESC,
-  NOECHO,
-  MUFFLEERRORS,
-  BACKTRACE,
-};
-
-struct sobject {
-  union {
-    struct { sobject *car; sobject *cdr; };
-    struct {
-      unsigned int type;
-      union {
-        symbol_t name;
-        int integer;
-        uint32_t chars;
-        float single_float;
-      };
-    };
-  };
-};
-
-#define car(x) (((object *) (x))->car)
-#define cdr(x) (((object *) (x))->cdr)
 
 extern jmp_buf toplevel_handler;
 extern jmp_buf *handler;
