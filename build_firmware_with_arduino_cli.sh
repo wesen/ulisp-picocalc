@@ -33,6 +33,7 @@ cp \
   "$SOURCE_DIR/ulisp_entry.cpp" \
   "$SOURCE_DIR/ulisp_error.cpp" \
   "$SOURCE_DIR/ulisp_memory.cpp" \
+  "$SOURCE_DIR/ulisp_persistence.cpp" \
   "$SOURCE_DIR/repl_window.h" \
   "$SOURCE_DIR/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
