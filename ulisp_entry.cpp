@@ -141,9 +141,9 @@ void initgfx () {
 }
 
 void setup () {
-  Serial.begin(9600);
+  Serial1.begin(9600);
   int start = millis();
-  while ((millis() - start) < 5000) { if (Serial) break; }
+  while ((millis() - start) < 5000) { if (Serial1) break; }
   #if defined(sdcardsupport)
   pinMode(SDCARD_SS_PIN, OUTPUT);
   digitalWrite(SDCARD_SS_PIN,1);
@@ -174,7 +174,7 @@ void repl (object *env) {
     Context = NIL;
     object *line = readmain(gserial);
     #if defined(CPU_NRF52840)
-    Serial.flush();
+    Serial1.flush();
     #endif
     if (BreakLevel) {
       if (line == nil || line == bsymbol(COLONC)) {
@@ -215,7 +215,7 @@ void loop () {
 }
 
 void ulisperror () {
-  delay(100); while (Serial.available()) Serial.read();
+  delay(100); while (Serial1.available()) Serial1.read();
   clrflag(NOESC); BreakLevel = 0; TraceStart = 0; TraceTop = 0;
   for (int i=0; i<TRACEMAX; i++) TraceDepth[i] = 0;
   #if defined(sdcardsupport)
