@@ -50,6 +50,12 @@ cp \
   "$SOURCE_DIR/ulisp_tables.cpp" \
   "$SOURCE_DIR/ulisp_eval.h" \
   "$SOURCE_DIR/ulisp_eval.cpp" \
+  "$SOURCE_DIR/ulisp_gfx.h" \
+  "$SOURCE_DIR/ulisp_gfx.cpp" \
+  "$SOURCE_DIR/ulisp_arduino.h" \
+  "$SOURCE_DIR/ulisp_arduino.cpp" \
+  "$SOURCE_DIR/ulisp_picocalc.h" \
+  "$SOURCE_DIR/ulisp_picocalc.cpp" \
   "$SOURCE_DIR/repl_window.h" \
   "$SOURCE_DIR/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
