@@ -58,6 +58,10 @@ cp \
   "$SOURCE_DIR/ulisp_picocalc.cpp" \
   "$SOURCE_DIR/ulisp_runtime.h" \
   "$SOURCE_DIR/ulisp_runtime.cpp" \
+  "$SOURCE_DIR/ulisp_runtime_symbols.cpp" \
+  "$SOURCE_DIR/ulisp_runtime_math.cpp" \
+  "$SOURCE_DIR/ulisp_runtime_data.cpp" \
+  "$SOURCE_DIR/ulisp_runtime_env.cpp" \
   "$SOURCE_DIR/ulisp_builtins.h" \
   "$SOURCE_DIR/ulisp_builtins.cpp" \
   "$SOURCE_DIR/ulisp_builtins_control.cpp" \
