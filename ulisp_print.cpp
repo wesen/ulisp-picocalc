@@ -32,8 +32,8 @@ void pserial (char c) {
   LastPrint = c;
   if (!tstflag(NOECHO)) ReplBackBufferAppend(c);
   #if defined (serialmonitor)
-  if (c == '\n') Serial.write('\r');
-  Serial.write(c);
+  if (c == '\n') Serial1.write('\r');
+  Serial1.write(c);
   #endif
 }
 
