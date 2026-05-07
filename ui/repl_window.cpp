@@ -6,13 +6,15 @@
 #include "repl_window.h"
 #include "window.h"
 
-ReplDrawState replDrawState;
-ReplBackBuffer replBack;
-ReplEditBuffer replEdit;
-ReplRenderCell replDesired[ReplLines][ReplColumns];
-ReplRenderCell replDrawn[ReplLines][ReplColumns];
-bool replDrawnValid = false;
-bool replUiDirty = true;
+ReplWindow mainReplWindow;
+
+ReplDrawState &replDrawState = mainReplWindow.drawState;
+ReplBackBuffer &replBack = mainReplWindow.back;
+ReplEditBuffer &replEdit = mainReplWindow.edit;
+ReplRenderCell (&replDesired)[ReplLines][ReplColumns] = mainReplWindow.desired;
+ReplRenderCell (&replDrawn)[ReplLines][ReplColumns] = mainReplWindow.drawn;
+bool &replDrawnValid = mainReplWindow.drawnValid;
+bool &replUiDirty = mainReplWindow.uiDirty;
 
 // ---------------------------------------------------------------------------
 // Back buffer helpers
@@ -282,6 +284,18 @@ void ReplRenderIfDirty() {
 // ---------------------------------------------------------------------------
 // Keyboard processing
 // ---------------------------------------------------------------------------
+
+void ReplWindow::init() { ReplWindowInit(); }
+void ReplWindow::appendOutput(char c) { ReplBackBufferAppend(c); }
+void ReplWindow::writeOutputString(const char *s) { ReplBackBufferWriteString(s); }
+void ReplWindow::resetDrawState() { ReplResetDrawState(); }
+void ReplWindow::setOutputStyle() { ReplSetOutputStyle(); }
+void ReplWindow::setPromptStyle() { ReplSetPromptStyle(); }
+void ReplWindow::setInputStyle() { ReplSetInputStyle(); }
+void ReplWindow::setErrorStyle() { ReplSetErrorStyle(); }
+void ReplWindow::processKey(uint8_t key) { ReplProcessKey(key); }
+void ReplWindow::renderAll() { ReplRenderAll(); }
+void ReplWindow::renderIfDirty() { ReplRenderIfDirty(); }
 
 void ReplProcessKey(uint8_t key) {
   if (key == 0xB1) { // KEY_ESC

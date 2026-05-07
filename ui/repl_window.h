@@ -109,13 +109,38 @@ struct ReplRenderCell {
 extern TFT_eSPI tft;
 extern PCKeyboard pc_kbd;
 
-extern ReplDrawState replDrawState;
-extern ReplBackBuffer replBack;
-extern ReplEditBuffer replEdit;
-extern ReplRenderCell replDesired[ReplLines][ReplColumns];
-extern ReplRenderCell replDrawn[ReplLines][ReplColumns];
-extern bool replDrawnValid;
-extern bool replUiDirty;
+class ReplWindow {
+public:
+  void init();
+  void appendOutput(char c);
+  void writeOutputString(const char *s);
+  void resetDrawState();
+  void setOutputStyle();
+  void setPromptStyle();
+  void setInputStyle();
+  void setErrorStyle();
+  void processKey(uint8_t key);
+  void renderAll();
+  void renderIfDirty();
+
+  ReplDrawState drawState;
+  ReplBackBuffer back;
+  ReplEditBuffer edit;
+  ReplRenderCell desired[ReplLines][ReplColumns];
+  ReplRenderCell drawn[ReplLines][ReplColumns];
+  bool drawnValid = false;
+  bool uiDirty = true;
+};
+
+extern ReplWindow mainReplWindow;
+
+extern ReplDrawState &replDrawState;
+extern ReplBackBuffer &replBack;
+extern ReplEditBuffer &replEdit;
+extern ReplRenderCell (&replDesired)[ReplLines][ReplColumns];
+extern ReplRenderCell (&replDrawn)[ReplLines][ReplColumns];
+extern bool &replDrawnValid;
+extern bool &replUiDirty;
 
 // ---------------------------------------------------------------------------
 // Back buffer / draw-state API

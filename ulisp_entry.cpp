@@ -93,7 +93,7 @@ void setup () {
   initsleep();
   initgfx();
   windowManager.init();
-  ReplWindowInit();
+  mainReplWindow.init();
   initkybd();
   pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
 }
