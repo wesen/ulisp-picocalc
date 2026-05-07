@@ -74,8 +74,8 @@ cp \
   "$SOURCE_DIR/ulisp_builtins_numbers.cpp" \
   "$SOURCE_DIR/ulisp_builtins_strings.cpp" \
   "$SOURCE_DIR/ulisp_builtins_system.cpp" \
-  "$SOURCE_DIR/repl_window.h" \
-  "$SOURCE_DIR/repl_window.cpp" \
+  "$SOURCE_DIR/ui/repl_window.h" \
+  "$SOURCE_DIR/ui/repl_window.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
   "$SKETCH_DIR/"
 
