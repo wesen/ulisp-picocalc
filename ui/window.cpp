@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 
+#include "ulisp_config.h"
 #include "window.h"
 
 extern TFT_eSPI tft;
