@@ -302,6 +302,14 @@ const char string261[] = ":gpio-oe";
 const char string262[] = ":gpio-oe-set";
 const char string263[] = ":gpio-oe-clr";
 const char string264[] = ":gpio-oe-xor";
+const char string265[] = "make-window";
+const char string266[] = "move-window";
+const char string267[] = "resize-window";
+const char string268[] = "clear-window";
+const char string269[] = "close-window";
+const char string270[] = "focus-window";
+const char string271[] = "window-position";
+const char string272[] = "window-size";
 
 // Documentation strings
 const char doc0[] = "nil\n"
@@ -882,6 +890,23 @@ const char doc247[] = "(read-pixel x y)\n"
 "Reads a pixel at coordinates (x,y) and returns the 5-6-5 colour value.";
 const char doc248[] = "(save-bmp filename)\n"
 "Saves the screen as a BMP file.";
+const char doc249[] = "(make-window x y cols rows)\n"
+"Creates a text window at pixel position (x,y), with size cols by rows characters,\n"
+"and returns it as an output stream.";
+const char doc250[] = "(move-window window x y)\n"
+"Moves window to pixel position (x,y), preserving its text contents.";
+const char doc251[] = "(resize-window window cols rows)\n"
+"Resizes window to cols by rows characters and clears its contents.";
+const char doc252[] = "(clear-window window)\n"
+"Clears the text contents of window.";
+const char doc253[] = "(close-window window)\n"
+"Closes window and frees its window slot.";
+const char doc254[] = "(focus-window window)\n"
+"Marks window as the focused text window.";
+const char doc255[] = "(window-position window)\n"
+"Returns the pixel position of window as the list (x y).";
+const char doc256[] = "(window-size window)\n"
+"Returns the character size of window as the list (cols rows).";
 
 // Built-in symbol lookup table
 const tbl_entry_t lookup_table[] = {
@@ -1134,6 +1159,14 @@ const tbl_entry_t lookup_table[] = {
   { string246, fn_getkey, 0200, doc246 },
   { string247, fn_readpixel, 0222, doc247 },
   { string248, fn_savebmp, 0211, doc248 },
+  { string265, fn_makewindow, 0244, doc249 },
+  { string266, fn_movewindow, 0233, doc250 },
+  { string267, fn_resizewindow, 0233, doc251 },
+  { string268, fn_clearwindow, 0211, doc252 },
+  { string269, fn_closewindow, 0211, doc253 },
+  { string270, fn_focuswindow, 0211, doc254 },
+  { string271, fn_windowposition, 0211, doc255 },
+  { string272, fn_windowsize, 0211, doc256 },
   { string249, (fn_ptr_type)LED_BUILTIN, 0, NULL },
   { string250, (fn_ptr_type)HIGH, DIGITALWRITE, NULL },
   { string251, (fn_ptr_type)LOW, DIGITALWRITE, NULL },

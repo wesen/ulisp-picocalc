@@ -199,5 +199,13 @@ object *fn_wifisoftap(object *args, object *env);
 object *fn_connected(object *args, object *env);
 object *fn_wifilocalip(object *args, object *env);
 object *fn_wificonnect(object *args, object *env);
+object *fn_makewindow(object *args, object *env);
+object *fn_movewindow(object *args, object *env);
+object *fn_resizewindow(object *args, object *env);
+object *fn_clearwindow(object *args, object *env);
+object *fn_closewindow(object *args, object *env);
+object *fn_focuswindow(object *args, object *env);
+object *fn_windowposition(object *args, object *env);
+object *fn_windowsize(object *args, object *env);
 
 #endif // ULISP_BUILTINS_H

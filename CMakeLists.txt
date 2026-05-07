@@ -80,6 +80,7 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_SOURCE_DIR}/ui/repl_window.cpp"
       "${ULISP_SOURCE_DIR}/ui/window.h"
       "${ULISP_SOURCE_DIR}/ui/window.cpp"
+      "${ULISP_SOURCE_DIR}/ui/window_builtins.cpp"
       "${ULISP_SOURCE_DIR}/Setup60_RP2040_ILI9488.h"
     VERBATIM
     COMMENT "Building ${output_name}.uf2 with ${fqbn}"

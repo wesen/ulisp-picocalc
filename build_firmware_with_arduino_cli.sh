@@ -78,6 +78,7 @@ cp \
   "$SOURCE_DIR/ui/repl_window.cpp" \
   "$SOURCE_DIR/ui/window.h" \
   "$SOURCE_DIR/ui/window.cpp" \
+  "$SOURCE_DIR/ui/window_builtins.cpp" \
   "$SOURCE_DIR/Setup60_RP2040_ILI9488.h" \
   "$SKETCH_DIR/"
 
