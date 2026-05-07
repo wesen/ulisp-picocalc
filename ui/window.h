@@ -10,6 +10,10 @@ constexpr uint8_t MaxWindowCols = 53;
 constexpr uint8_t MaxWindowRows = 16;
 constexpr uint8_t WindowCharWidth = 6;
 constexpr uint8_t WindowLeading = 10;
+constexpr uint8_t WindowBorderWidth = 1;
+constexpr uint16_t DefaultWindowForeground = 0xFFFF;
+constexpr uint16_t DefaultWindowBackground = 0x0010;
+constexpr uint16_t DefaultWindowBorder = 0x07FF;
 
 class TextWindow {
 public:
@@ -17,7 +21,7 @@ public:
   void clear();
   void moveTo(int x, int y);
   void resize(int cols, int rows);
-  void setColors(uint16_t fg, uint16_t bg);
+  void setColors(uint16_t fg, uint16_t bg, uint16_t border);
   void writeChar(char c);
   void writeString(const char *s);
   void renderIfDirty();
@@ -35,7 +39,7 @@ private:
   void newline();
   void scrollUp();
   void clearCells();
-  void clearScreenRect();
+  void clearScreenRect(uint16_t colour);
   int clampCols(int cols) const;
   int clampRows(int rows) const;
 
@@ -49,8 +53,9 @@ private:
   int rows_ = MaxWindowRows;
   int cursorCol_ = 0;
   int cursorRow_ = 0;
-  uint16_t fg_ = 0xFFFF;
-  uint16_t bg_ = 0x0000;
+  uint16_t fg_ = DefaultWindowForeground;
+  uint16_t bg_ = DefaultWindowBackground;
+  uint16_t border_ = DefaultWindowBorder;
   char cells_[MaxWindowRows][MaxWindowCols];
 };
 

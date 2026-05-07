@@ -31,10 +31,12 @@ void TextWindow::clearCells() {
   cursorRow_ = 0;
 }
 
-void TextWindow::clearScreenRect() {
+void TextWindow::clearScreenRect(uint16_t colour) {
 #if defined(gfxsupport)
   if (visible_) {
-    tft.fillRect(x_, y_, cols_ * WindowCharWidth, rows_ * WindowLeading, bg_);
+    int width = cols_ * WindowCharWidth + 2 * WindowBorderWidth;
+    int height = rows_ * WindowLeading + 2 * WindowBorderWidth;
+    tft.fillRect(x_, y_, width, height, colour);
   }
 #endif
 }
@@ -47,36 +49,37 @@ void TextWindow::init(uint8_t id, int x, int y, int cols, int rows) {
   y_ = y;
   cols_ = clampCols(cols);
   rows_ = clampRows(rows);
-  fg_ = 0xFFFF;
-  bg_ = 0x0000;
+  fg_ = DefaultWindowForeground;
+  bg_ = DefaultWindowBackground;
+  border_ = DefaultWindowBorder;
   clearCells();
   dirty_ = true;
 }
 
 void TextWindow::clear() {
   clearCells();
-  clearScreenRect();
   dirty_ = true;
 }
 
 void TextWindow::moveTo(int x, int y) {
-  clearScreenRect();
+  clearScreenRect(0x0000);
   x_ = x;
   y_ = y;
   dirty_ = true;
 }
 
 void TextWindow::resize(int cols, int rows) {
-  clearScreenRect();
+  clearScreenRect(0x0000);
   cols_ = clampCols(cols);
   rows_ = clampRows(rows);
   clearCells();
   dirty_ = true;
 }
 
-void TextWindow::setColors(uint16_t fg, uint16_t bg) {
+void TextWindow::setColors(uint16_t fg, uint16_t bg, uint16_t border) {
   fg_ = fg;
   bg_ = bg;
+  border_ = border;
   dirty_ = true;
 }
 
@@ -120,11 +123,14 @@ void TextWindow::writeString(const char *s) {
 void TextWindow::renderIfDirty() {
 #if defined(gfxsupport)
   if (!used_ || !visible_ || !dirty_) return;
+  int width = cols_ * WindowCharWidth + 2 * WindowBorderWidth;
+  int height = rows_ * WindowLeading + 2 * WindowBorderWidth;
+  tft.fillRect(x_, y_, width, height, bg_);
+  tft.drawRect(x_, y_, width, height, border_);
   for (int row = 0; row < rows_; row++) {
     for (int col = 0; col < cols_; col++) {
-      int px = x_ + col * WindowCharWidth;
-      int py = y_ + row * WindowLeading;
-      tft.fillRect(px, py, WindowCharWidth, WindowLeading, bg_);
+      int px = x_ + WindowBorderWidth + col * WindowCharWidth;
+      int py = y_ + WindowBorderWidth + row * WindowLeading;
       char ch = cells_[row][col];
       if (ch != ' ') tft.drawChar(px, py, ch, fg_, bg_, 1);
     }
@@ -134,7 +140,7 @@ void TextWindow::renderIfDirty() {
 }
 
 void TextWindow::close() {
-  clearScreenRect();
+  clearScreenRect(0x0000);
   used_ = false;
   visible_ = false;
   dirty_ = false;

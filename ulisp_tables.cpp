@@ -890,9 +890,10 @@ const char doc247[] = "(read-pixel x y)\n"
 "Reads a pixel at coordinates (x,y) and returns the 5-6-5 colour value.";
 const char doc248[] = "(save-bmp filename)\n"
 "Saves the screen as a BMP file.";
-const char doc249[] = "(make-window x y cols rows)\n"
-"Creates a text window at pixel position (x,y), with size cols by rows characters,\n"
-"and returns it as an output stream.";
+const char doc249[] = "(make-window x y cols rows [fg bg border])\n"
+"Creates a bordered text window at pixel position (x,y), with size cols by rows\n"
+"characters, and returns it as an output stream. Optional colours are 16-bit RGB565\n"
+"foreground, background, and border values.";
 const char doc250[] = "(move-window window x y)\n"
 "Moves window to pixel position (x,y), preserving its text contents.";
 const char doc251[] = "(resize-window window cols rows)\n"
@@ -1159,7 +1160,7 @@ const tbl_entry_t lookup_table[] = {
   { string246, fn_getkey, 0200, doc246 },
   { string247, fn_readpixel, 0222, doc247 },
   { string248, fn_savebmp, 0211, doc248 },
-  { string265, fn_makewindow, 0244, doc249 },
+  { string265, fn_makewindow, 0247, doc249 },
   { string266, fn_movewindow, 0233, doc250 },
   { string267, fn_resizewindow, 0233, doc251 },
   { string268, fn_clearwindow, 0211, doc252 },

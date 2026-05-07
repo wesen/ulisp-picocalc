@@ -26,6 +26,19 @@ object *fn_makewindow(object *args, object *env) {
   int rows = checkinteger(car(cdr(cdr(cdr(args)))));
   TextWindow *window = windowManager.createTextWindow(x, y, cols, rows);
   if (window == nullptr) error2("no free windows");
+  object *rest = cdr(cdr(cdr(cdr(args))));
+  if (rest != NULL) {
+    uint16_t fg = checkinteger(first(rest));
+    uint16_t bg = DefaultWindowBackground;
+    uint16_t border = DefaultWindowBorder;
+    rest = cdr(rest);
+    if (rest != NULL) {
+      bg = checkinteger(first(rest));
+      rest = cdr(rest);
+      if (rest != NULL) border = checkinteger(first(rest));
+    }
+    window->setColors(fg, bg, border);
+  }
   return stream(WINDOWSTREAM, window->id());
 }
 
