@@ -310,6 +310,7 @@ const char string269[] = "close-window";
 const char string270[] = "focus-window";
 const char string271[] = "window-position";
 const char string272[] = "window-size";
+const char string273[] = "window-debug";
 
 // Documentation strings
 const char doc0[] = "nil\n"
@@ -908,6 +909,9 @@ const char doc255[] = "(window-position window)\n"
 "Returns the pixel position of window as the list (x y).";
 const char doc256[] = "(window-size window)\n"
 "Returns the character size of window as the list (cols rows).";
+const char doc257[] = "(window-debug [window])\n"
+"Returns window manager debug information. With a window, returns\n"
+"(id x y cols rows visible dirty focused). Without a window, returns (focused).";
 
 // Built-in symbol lookup table
 const tbl_entry_t lookup_table[] = {
@@ -1168,6 +1172,7 @@ const tbl_entry_t lookup_table[] = {
   { string270, fn_focuswindow, 0211, doc254 },
   { string271, fn_windowposition, 0211, doc255 },
   { string272, fn_windowsize, 0211, doc256 },
+  { string273, fn_windowdebug, 0201, doc257 },
   { string249, (fn_ptr_type)LED_BUILTIN, 0, NULL },
   { string250, (fn_ptr_type)HIGH, DIGITALWRITE, NULL },
   { string251, (fn_ptr_type)LOW, DIGITALWRITE, NULL },

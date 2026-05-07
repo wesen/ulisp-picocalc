@@ -207,5 +207,6 @@ object *fn_closewindow(object *args, object *env);
 object *fn_focuswindow(object *args, object *env);
 object *fn_windowposition(object *args, object *env);
 object *fn_windowsize(object *args, object *env);
+object *fn_windowdebug(object *args, object *env);
 
 #endif // ULISP_BUILTINS_H

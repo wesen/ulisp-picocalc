@@ -4,6 +4,7 @@
 
 #include "ulisp_config.h"
 #include "ulisp_types.h"
+#include "ulisp_state.h"
 #include "ulisp_error.h"
 #include "ulisp_memory.h"
 #include "ulisp_runtime.h"
@@ -94,4 +95,21 @@ object *fn_windowsize(object *args, object *env) {
   int id = checkwindow(first(args));
   TextWindow *window = windowManager.textWindow(id);
   return cons(number(window->cols()), cons(number(window->rows()), NULL));
+}
+
+object *fn_windowdebug(object *args, object *env) {
+  (void) env;
+  if (args == NULL || first(args) == NULL) {
+    return cons(number(windowManager.focused()), NULL);
+  }
+  int id = checkwindow(first(args));
+  TextWindow *window = windowManager.textWindow(id);
+  return cons(number(id),
+         cons(number(window->x()),
+         cons(number(window->y()),
+         cons(number(window->cols()),
+         cons(number(window->rows()),
+         cons(window->visible() ? tee : nil,
+         cons(window->dirty() ? tee : nil,
+         cons(number(windowManager.focused()), NULL))))))));
 }

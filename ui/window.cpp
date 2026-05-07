@@ -120,9 +120,9 @@ void TextWindow::writeString(const char *s) {
   while (*s) writeChar(*s++);
 }
 
-void TextWindow::renderIfDirty() {
+void TextWindow::render() {
 #if defined(gfxsupport)
-  if (!used_ || !visible_ || !dirty_) return;
+  if (!used_ || !visible_) return;
   int width = cols_ * WindowCharWidth + 2 * WindowBorderWidth;
   int height = rows_ * WindowLeading + 2 * WindowBorderWidth;
   tft.fillRect(x_, y_, width, height, bg_);
@@ -137,6 +137,11 @@ void TextWindow::renderIfDirty() {
   }
   dirty_ = false;
 #endif
+}
+
+void TextWindow::renderIfDirty() {
+  if (!dirty_) return;
+  render();
 }
 
 void TextWindow::close() {
@@ -195,6 +200,12 @@ bool WindowManager::focus(uint8_t id) {
   if (textWindow(id) == nullptr) return false;
   focused_ = id;
   return true;
+}
+
+void WindowManager::renderAll() {
+  for (uint8_t i = 0; i < MaxTextWindows; i++) {
+    windows_[i].render();
+  }
 }
 
 void WindowManager::renderAllDirty() {

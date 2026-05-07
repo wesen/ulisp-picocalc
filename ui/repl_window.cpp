@@ -4,6 +4,7 @@
 #include <TFT_eSPI.h>
 #include <PCKeyboard.h>
 #include "repl_window.h"
+#include "window.h"
 
 ReplDrawState replDrawState;
 ReplBackBuffer replBack;
@@ -270,6 +271,7 @@ void ReplRenderAll() {
   }
   replDrawnValid = true;
   replUiDirty = false;
+  windowManager.renderAll();
 }
 
 void ReplRenderIfDirty() {

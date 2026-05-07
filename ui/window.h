@@ -24,12 +24,14 @@ public:
   void setColors(uint16_t fg, uint16_t bg, uint16_t border);
   void writeChar(char c);
   void writeString(const char *s);
+  void render();
   void renderIfDirty();
   void close();
 
   uint8_t id() const { return id_; }
   bool used() const { return used_; }
   bool visible() const { return visible_; }
+  bool dirty() const { return dirty_; }
   int x() const { return x_; }
   int y() const { return y_; }
   int cols() const { return cols_; }
@@ -69,6 +71,7 @@ public:
   bool resize(uint8_t id, int cols, int rows);
   bool focus(uint8_t id);
   uint8_t focused() const { return focused_; }
+  void renderAll();
   void renderAllDirty();
 
 private:
