@@ -25,11 +25,15 @@
 
 constexpr int ReplScreenWidth = 320;
 constexpr int ReplScreenHeight = 320;
+constexpr int ReplWindowX = 0;
+constexpr int ReplWindowY = ReplScreenHeight / 2;
+constexpr int ReplWindowWidth = ReplScreenWidth;
+constexpr int ReplWindowHeight = ReplScreenHeight / 2;
 constexpr int ReplCharWidth = 6;
 constexpr int ReplCharHeight = 8;
 constexpr int ReplLeading = 10;
-constexpr int ReplColumns = ReplScreenWidth / ReplCharWidth;   // 53
-constexpr int ReplLines = ReplScreenHeight / ReplLeading;      // 32
+constexpr int ReplColumns = ReplWindowWidth / ReplCharWidth;   // 53
+constexpr int ReplLines = ReplWindowHeight / ReplLeading;      // 16
 constexpr int ReplStatusRows = 1;
 constexpr int ReplInputRows = 3;
 constexpr int ReplTranscriptRows = ReplLines - ReplStatusRows - ReplInputRows;

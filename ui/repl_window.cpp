@@ -197,15 +197,15 @@ void replSetDesiredText(int row, int col, const char *text, uint8_t attr, bool b
 }
 
 void replDrawCell(int row, int col) {
-  int x = col * ReplCharWidth;
-  int y = row * ReplLeading;
+  int x = ReplWindowX + col * ReplCharWidth;
+  int y = ReplWindowY + row * ReplLeading;
   uint16_t fg = replCellFg(row, col);
   uint16_t bg = replCellBg(row, col);
   char ch = replDesired[row][col].ch;
   tft.fillRect(x, y, ReplCharWidth, ReplLeading, bg);
   if (ch != ' ') {
     tft.drawChar(x, y, ch, fg, bg, 1);
-    if (replDesired[row][col].bold && x + 1 < ReplScreenWidth)
+    if (replDesired[row][col].bold && x + 1 < ReplWindowX + ReplWindowWidth)
       tft.drawChar(x + 1, y, ch, fg, bg, 1);
   }
 }
@@ -257,6 +257,7 @@ void replComposeInput() {
 }
 
 void ReplRenderAll() {
+  tft.drawFastHLine(ReplWindowX, ReplWindowY, ReplWindowWidth, ReplPalette[4]);
   replClearDesired();
   replComposeTranscript();
   replComposeStatus();
