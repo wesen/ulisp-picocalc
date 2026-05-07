@@ -311,6 +311,9 @@ const char string270[] = "focus-window";
 const char string271[] = "window-position";
 const char string272[] = "window-size";
 const char string273[] = "window-debug";
+const char string274[] = "set-window-colors";
+const char string275[] = "window-redraw";
+const char string276[] = "list-windows";
 
 // Documentation strings
 const char doc0[] = "nil\n"
@@ -912,6 +915,12 @@ const char doc256[] = "(window-size window)\n"
 const char doc257[] = "(window-debug [window])\n"
 "Returns window manager debug information. With a window, returns\n"
 "(id x y cols rows visible dirty focused). Without a window, returns (focused).";
+const char doc258[] = "(set-window-colors window fg bg [border])\n"
+"Sets a text window's RGB565 foreground, background, and optional border colours.";
+const char doc259[] = "(window-redraw window)\n"
+"Forces a text window to redraw immediately.";
+const char doc260[] = "(list-windows)\n"
+"Returns a list of currently active text window streams.";
 
 // Built-in symbol lookup table
 const tbl_entry_t lookup_table[] = {
@@ -1173,6 +1182,9 @@ const tbl_entry_t lookup_table[] = {
   { string271, fn_windowposition, 0211, doc255 },
   { string272, fn_windowsize, 0211, doc256 },
   { string273, fn_windowdebug, 0201, doc257 },
+  { string274, fn_setwindowcolors, 0234, doc258 },
+  { string275, fn_windowredraw, 0211, doc259 },
+  { string276, fn_listwindows, 0200, doc260 },
   { string249, (fn_ptr_type)LED_BUILTIN, 0, NULL },
   { string250, (fn_ptr_type)HIGH, DIGITALWRITE, NULL },
   { string251, (fn_ptr_type)LOW, DIGITALWRITE, NULL },

@@ -97,6 +97,37 @@ object *fn_windowsize(object *args, object *env) {
   return cons(number(window->cols()), cons(number(window->rows()), NULL));
 }
 
+object *fn_setwindowcolors(object *args, object *env) {
+  (void) env;
+  int id = checkwindow(first(args));
+  uint16_t fg = checkinteger(second(args));
+  uint16_t bg = checkinteger(third(args));
+  uint16_t border = DefaultWindowBorder;
+  object *rest = cdr(cdr(cdr(args)));
+  if (rest != NULL) border = checkinteger(first(rest));
+  TextWindow *window = windowManager.textWindow(id);
+  window->setColors(fg, bg, border);
+  return first(args);
+}
+
+object *fn_windowredraw(object *args, object *env) {
+  (void) env;
+  int id = checkwindow(first(args));
+  TextWindow *window = windowManager.textWindow(id);
+  window->render();
+  return first(args);
+}
+
+object *fn_listwindows(object *args, object *env) {
+  (void) args;
+  (void) env;
+  object *result = nil;
+  for (int id = MaxTextWindows - 1; id >= 0; id--) {
+    if (windowManager.textWindow(id) != nullptr) result = cons(stream(WINDOWSTREAM, id), result);
+  }
+  return result;
+}
+
 object *fn_windowdebug(object *args, object *env) {
   (void) env;
   if (args == NULL || first(args) == NULL) {
