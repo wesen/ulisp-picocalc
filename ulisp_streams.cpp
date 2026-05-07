@@ -32,6 +32,7 @@
 #include "ulisp_terminal.h"
 #include "ulisp_builtins.h"
 #include "ulisp_entry.h"
+#include "window.h"
 
 #if defined(gfxsupport)
 extern TFT_eSPI tft;
@@ -256,6 +257,21 @@ pfun_t pfun_wifi (uint8_t address) {
   return pfun;
 }
 
+void window0write (char c) { TextWindow *w = windowManager.textWindow(0); if (w) { w->writeChar(c); w->renderIfDirty(); } }
+void window1write (char c) { TextWindow *w = windowManager.textWindow(1); if (w) { w->writeChar(c); w->renderIfDirty(); } }
+void window2write (char c) { TextWindow *w = windowManager.textWindow(2); if (w) { w->writeChar(c); w->renderIfDirty(); } }
+void window3write (char c) { TextWindow *w = windowManager.textWindow(3); if (w) { w->writeChar(c); w->renderIfDirty(); } }
+
+pfun_t pfun_window (uint8_t address) {
+  switch (address) {
+    case 0: return window0write;
+    case 1: return window1write;
+    case 2: return window2write;
+    case 3: return window3write;
+    default: return pserial;
+  }
+}
+
 // Stream reading functions
 
 gfun_t gfun_i2c (uint8_t address) {
@@ -318,6 +334,7 @@ const char sdstreamname[] = "sd";
 const char wifistreamname[] = "wifi";
 const char stringstreamname[] = "string";
 const char gfxstreamname[] = "gfx";
+const char windowstreamname[] = "window";
 
 // Stream lookup table - needs to be in same order as enum stream
 const stream_entry_t stream_table[] = {
@@ -328,6 +345,7 @@ const stream_entry_t stream_table[] = {
   { wifistreamname, pfun_wifi, gfun_wifi },
   { stringstreamname, pfun_string, NULL },
   { gfxstreamname, pfun_gfx, NULL },
+  { windowstreamname, pfun_window, NULL },
 };
 
 #if !defined(streamextensions)
@@ -364,6 +382,7 @@ gfun_t gstreamfun (object *args) {
   }
   bool n = nstream<USERSTREAMS;
   gstream_ptr_t streamfunction = streamtable(n?0:1)[n?nstream:nstream-USERSTREAMS].gfunptr;
+  if (streamfunction == NULL) error2("stream is not readable");
   gfun = streamfunction(address);
   return gfun;
 }

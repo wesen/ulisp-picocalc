@@ -13,7 +13,7 @@ extern File SDpfile;
 extern File SDgfile;
 #endif
 
-enum stream { SERIALSTREAM, I2CSTREAM, SPISTREAM, SDSTREAM, WIFISTREAM, STRINGSTREAM, GFXSTREAM };
+enum stream { SERIALSTREAM, I2CSTREAM, SPISTREAM, SDSTREAM, WIFISTREAM, STRINGSTREAM, GFXSTREAM, WINDOWSTREAM };
 
 int I2Cread(TwoWire *port);
 void I2Cwrite(TwoWire *port, uint8_t data);
@@ -30,6 +30,7 @@ pfun_t pfun_string(uint8_t address);
 pfun_t pfun_sd(uint8_t address);
 pfun_t pfun_gfx(uint8_t address);
 pfun_t pfun_wifi(uint8_t address);
+pfun_t pfun_window(uint8_t address);
 gfun_t gfun_i2c(uint8_t address);
 gfun_t gfun_spi(uint8_t address);
 gfun_t gfun_serial(uint8_t address);

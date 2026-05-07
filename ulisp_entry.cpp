@@ -32,6 +32,7 @@
 #include "ulisp_picocalc.h"
 #include "ulisp_entry.h"
 #include "repl_window.h"
+#include "window.h"
 
 #if defined(sdcardsupport)
 extern File SDpfile;
@@ -91,6 +92,7 @@ void setup () {
   initenv();
   initsleep();
   initgfx();
+  windowManager.init();
   ReplWindowInit();
   initkybd();
   pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
