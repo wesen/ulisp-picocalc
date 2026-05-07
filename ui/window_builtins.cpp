@@ -128,6 +128,13 @@ object *fn_listwindows(object *args, object *env) {
   return result;
 }
 
+object *fn_focusrepl(object *args, object *env) {
+  (void) args;
+  (void) env;
+  if (!windowManager.focusReplWindow()) error2("repl window unavailable");
+  return tee;
+}
+
 object *fn_windowdebug(object *args, object *env) {
   (void) env;
   if (args == NULL || first(args) == NULL) {

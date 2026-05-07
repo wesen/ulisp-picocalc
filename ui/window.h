@@ -15,6 +15,11 @@ constexpr uint16_t DefaultWindowForeground = 0xFFFF;
 constexpr uint16_t DefaultWindowBackground = 0x0010;
 constexpr uint16_t DefaultWindowBorder = 0x07FF;
 
+class ReplWindow;
+
+constexpr uint8_t WindowFocusNone = 0xFF;
+constexpr uint8_t WindowFocusRepl = 0xFE;
+
 class TextWindow {
 public:
   void init(uint8_t id, int x, int y, int cols, int rows);
@@ -64,19 +69,23 @@ private:
 class WindowManager {
 public:
   void init();
+  void attachReplWindow(ReplWindow *replWindow);
+  ReplWindow *replWindow();
   TextWindow *createTextWindow(int x, int y, int cols, int rows);
   TextWindow *textWindow(uint8_t id);
   bool close(uint8_t id);
   bool move(uint8_t id, int x, int y);
   bool resize(uint8_t id, int cols, int rows);
   bool focus(uint8_t id);
+  bool focusReplWindow();
   uint8_t focused() const { return focused_; }
   void renderAll();
   void renderAllDirty();
 
 private:
   TextWindow windows_[MaxTextWindows];
-  uint8_t focused_ = 0xFF;
+  ReplWindow *replWindow_ = nullptr;
+  uint8_t focused_ = WindowFocusNone;
 };
 
 extern WindowManager windowManager;

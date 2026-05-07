@@ -314,6 +314,7 @@ const char string273[] = "window-debug";
 const char string274[] = "set-window-colors";
 const char string275[] = "window-redraw";
 const char string276[] = "list-windows";
+const char string277[] = "focus-repl";
 
 // Documentation strings
 const char doc0[] = "nil\n"
@@ -921,6 +922,8 @@ const char doc259[] = "(window-redraw window)\n"
 "Forces a text window to redraw immediately.";
 const char doc260[] = "(list-windows)\n"
 "Returns a list of currently active text window streams.";
+const char doc261[] = "(focus-repl)\n"
+"Moves window-manager focus back to the main REPL window.";
 
 // Built-in symbol lookup table
 const tbl_entry_t lookup_table[] = {
@@ -1185,6 +1188,7 @@ const tbl_entry_t lookup_table[] = {
   { string274, fn_setwindowcolors, 0234, doc258 },
   { string275, fn_windowredraw, 0211, doc259 },
   { string276, fn_listwindows, 0200, doc260 },
+  { string277, fn_focusrepl, 0200, doc261 },
   { string249, (fn_ptr_type)LED_BUILTIN, 0, NULL },
   { string250, (fn_ptr_type)HIGH, DIGITALWRITE, NULL },
   { string251, (fn_ptr_type)LOW, DIGITALWRITE, NULL },

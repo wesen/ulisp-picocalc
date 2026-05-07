@@ -210,6 +210,7 @@ object *fn_windowsize(object *args, object *env);
 object *fn_setwindowcolors(object *args, object *env);
 object *fn_windowredraw(object *args, object *env);
 object *fn_listwindows(object *args, object *env);
+object *fn_focusrepl(object *args, object *env);
 object *fn_windowdebug(object *args, object *env);
 
 #endif // ULISP_BUILTINS_H

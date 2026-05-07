@@ -153,10 +153,20 @@ void TextWindow::close() {
 }
 
 void WindowManager::init() {
-  focused_ = 0xFF;
+  focused_ = WindowFocusNone;
+  replWindow_ = nullptr;
   for (uint8_t i = 0; i < MaxTextWindows; i++) {
     windows_[i].close();
   }
+}
+
+void WindowManager::attachReplWindow(ReplWindow *replWindow) {
+  replWindow_ = replWindow;
+  if (focused_ == WindowFocusNone && replWindow_ != nullptr) focused_ = WindowFocusRepl;
+}
+
+ReplWindow *WindowManager::replWindow() {
+  return replWindow_;
 }
 
 TextWindow *WindowManager::createTextWindow(int x, int y, int cols, int rows) {
@@ -179,7 +189,7 @@ bool WindowManager::close(uint8_t id) {
   TextWindow *window = textWindow(id);
   if (window == nullptr) return false;
   window->close();
-  if (focused_ == id) focused_ = 0xFF;
+  if (focused_ == id) focused_ = (replWindow_ != nullptr) ? WindowFocusRepl : WindowFocusNone;
   return true;
 }
 
@@ -200,6 +210,12 @@ bool WindowManager::resize(uint8_t id, int cols, int rows) {
 bool WindowManager::focus(uint8_t id) {
   if (textWindow(id) == nullptr) return false;
   focused_ = id;
+  return true;
+}
+
+bool WindowManager::focusReplWindow() {
+  if (replWindow_ == nullptr) return false;
+  focused_ = WindowFocusRepl;
   return true;
 }
 

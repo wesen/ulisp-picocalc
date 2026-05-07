@@ -94,6 +94,8 @@ void setup () {
   initgfx();
   windowManager.init();
   mainReplWindow.init();
+  windowManager.attachReplWindow(&mainReplWindow);
+  windowManager.focusReplWindow();
   initkybd();
   pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
 }
