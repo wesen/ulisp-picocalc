@@ -26,7 +26,6 @@ object *fn_makewindow(object *args, object *env) {
   int rows = checkinteger(car(cdr(cdr(cdr(args)))));
   TextWindow *window = windowManager.createTextWindow(x, y, cols, rows);
   if (window == nullptr) error2("no free windows");
-  window->renderIfDirty();
   return stream(WINDOWSTREAM, window->id());
 }
 
@@ -36,7 +35,6 @@ object *fn_movewindow(object *args, object *env) {
   int x = checkinteger(second(args));
   int y = checkinteger(third(args));
   if (!windowManager.move(id, x, y)) error2("invalid window");
-  windowManager.renderAllDirty();
   return first(args);
 }
 
@@ -46,7 +44,6 @@ object *fn_resizewindow(object *args, object *env) {
   int cols = checkinteger(second(args));
   int rows = checkinteger(third(args));
   if (!windowManager.resize(id, cols, rows)) error2("invalid window");
-  windowManager.renderAllDirty();
   return first(args);
 }
 
@@ -55,7 +52,6 @@ object *fn_clearwindow(object *args, object *env) {
   int id = checkwindow(first(args));
   TextWindow *window = windowManager.textWindow(id);
   window->clear();
-  window->renderIfDirty();
   return nil;
 }
 

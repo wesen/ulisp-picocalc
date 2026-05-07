@@ -257,10 +257,10 @@ pfun_t pfun_wifi (uint8_t address) {
   return pfun;
 }
 
-void window0write (char c) { TextWindow *w = windowManager.textWindow(0); if (w) { w->writeChar(c); w->renderIfDirty(); } }
-void window1write (char c) { TextWindow *w = windowManager.textWindow(1); if (w) { w->writeChar(c); w->renderIfDirty(); } }
-void window2write (char c) { TextWindow *w = windowManager.textWindow(2); if (w) { w->writeChar(c); w->renderIfDirty(); } }
-void window3write (char c) { TextWindow *w = windowManager.textWindow(3); if (w) { w->writeChar(c); w->renderIfDirty(); } }
+void window0write (char c) { TextWindow *w = windowManager.textWindow(0); if (w) w->writeChar(c); }
+void window1write (char c) { TextWindow *w = windowManager.textWindow(1); if (w) w->writeChar(c); }
+void window2write (char c) { TextWindow *w = windowManager.textWindow(2); if (w) w->writeChar(c); }
+void window3write (char c) { TextWindow *w = windowManager.textWindow(3); if (w) w->writeChar(c); }
 
 pfun_t pfun_window (uint8_t address) {
   switch (address) {

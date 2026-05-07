@@ -139,6 +139,7 @@ void repl (object *env) {
     unprotect();
     pfl(pserial);
     ReplRenderIfDirty();
+    windowManager.renderAllDirty();
   }
 }
 
