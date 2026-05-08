@@ -76,6 +76,8 @@ function(add_ulisp_arduino_target target_name fqbn output_name)
       "${ULISP_SOURCE_DIR}/ulisp_builtins_numbers.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_builtins_strings.cpp"
       "${ULISP_SOURCE_DIR}/ulisp_builtins_system.cpp"
+      "${ULISP_SOURCE_DIR}/ulisp_http.h"
+      "${ULISP_SOURCE_DIR}/ulisp_http.cpp"
       "${ULISP_SOURCE_DIR}/ui/repl_window.h"
       "${ULISP_SOURCE_DIR}/ui/repl_window.cpp"
       "${ULISP_SOURCE_DIR}/ui/window.h"

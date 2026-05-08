@@ -54,6 +54,7 @@ extern const char LispLibrary[];
   #define WORKSPACESIZE (15230-SDSIZE)    /* Objects (8*bytes) */
   #define CODESIZE 256                    /* Bytes */
   #define STACKDIFF 480
+  #define ULISP_WIFI
   #define CPU_RP2040
 
 // RP2350 boards ***************************************************************
@@ -71,13 +72,14 @@ extern const char LispLibrary[];
 
 #elif defined(ARDUINO_RASPBERRY_PI_PICO_2W)
   #if defined(__riscv)
-  #define WORKSPACESIZE (34900-SDSIZE)    /* Objects (8*bytes) */
+  #define WORKSPACESIZE (30000-SDSIZE)    /* Objects (8*bytes) — reduced to leave RAM for Wi-Fi/HTTP POC */
   #define STACKDIFF 580
   #else
-  #define WORKSPACESIZE (39200-SDSIZE)    /* Objects (8*bytes) */
+  #define WORKSPACESIZE (33000-SDSIZE)    /* Objects (8*bytes) — reduced to leave RAM for Wi-Fi/HTTP POC */
   #define STACKDIFF 520
   #endif
   #define CODESIZE 256                    /* Bytes */
+  #define ULISP_WIFI
   #define CPU_RP2350
 
 #elif defined(ARDUINO_PIMORONI_PICO_PLUS_2)

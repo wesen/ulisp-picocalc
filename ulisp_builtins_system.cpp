@@ -6,13 +6,18 @@
 #include <limits.h>
 #include <Wire.h>
 
+#include "ulisp_config.h"
+
+#if defined(ULISP_WIFI)
+#include <WiFi.h>
+#endif
+
 #if defined(sdcardsupport)
 #include <SD.h>
 #endif
 
 #define Serial Serial1
 
-#include "ulisp_config.h"
 #include "ulisp_types.h"
 #include "ulisp_messages.h"
 #include "ulisp_state.h"
@@ -51,6 +56,10 @@ extern const char oddargs[];
 extern const char indexrange[];
 extern const char unknownstreamtype[];
 
+#if defined(ULISP_WIFI)
+extern WiFiClient client;
+extern WiFiServer server;
+#endif
 
 // System functions
 
@@ -559,7 +568,7 @@ object *sp_withclient (object *args, object *env) {
   params = cdr(params);
   int n;
   if (params == NULL) {
-    client = server.available();
+    client = server.accept();
     if (!client) return nil;
     n = 2;
   } else {
@@ -662,7 +671,7 @@ object *fn_wificonnect (object *args, object *env) {
   char ssid[33], pass[65];
   int result = 0;
   if (args == NULL) { WiFi.disconnect(); return nil; }
-  if (cdr(args) == NULL) WiFi.begin(cstring(first(args), ssid, 33));
+  if (cdr(args) == NULL) result = WiFi.begin(cstring(first(args), ssid, 33));
   else {
     if (cddr(args) != NULL) WiFi.config(ipstring(third(args)));
     result = WiFi.begin(cstring(first(args), ssid, 33), cstring(second(args), pass, 65));
@@ -672,6 +681,107 @@ object *fn_wificonnect (object *args, object *env) {
   else if (result == WL_CONNECT_FAILED) error2("connection failed");
   else error2("unable to connect");
   return nil;
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+#if defined(ULISP_WIFI)
+static const char *wifi_status_name(uint8_t status) {
+  switch (status) {
+    case WL_IDLE_STATUS: return "idle";
+    case WL_NO_SSID_AVAIL: return "no-ssid";
+    case WL_SCAN_COMPLETED: return "scan-completed";
+    case WL_CONNECTED: return "connected";
+    case WL_CONNECT_FAILED: return "connect-failed";
+    case WL_CONNECTION_LOST: return "connection-lost";
+    case WL_DISCONNECTED: return "disconnected";
+    default: return "unknown";
+  }
+}
+
+static object *wifi_scan_entry(int i) {
+  object *ssid = lispstring((char *)WiFi.SSID((uint8_t)i));
+  object *entry = cons(ssid, cons(number(WiFi.RSSI((uint8_t)i)), cons(number(WiFi.encryptionType((uint8_t)i)), nil)));
+  return entry;
+}
+
+static object *alist_string(const char *key, object *value, object *tail) {
+  return cons(cons(lispstring((char *)key), value), tail);
+}
+#endif
+
+object *fn_wifiscan (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  int n = WiFi.scanNetworks();
+  if (n < 0) return number(n);
+  object *result = nil;
+  for (int i = n - 1; i >= 0; i--) result = cons(wifi_scan_entry(i), result);
+  return result;
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifiscanmap (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  object *function = first(args);
+  int n = WiFi.scanNetworks();
+  if (n < 0) return number(n);
+  object *head = cons(NULL, NULL);
+  protect(head);
+  object *tail = head;
+  for (int i = 0; i < n; i++) {
+    object *ssid = lispstring((char *)WiFi.SSID((uint8_t)i));
+    protect(ssid);
+    object *callargs = cons(ssid, cons(number(WiFi.RSSI((uint8_t)i)), cons(number(WiFi.encryptionType((uint8_t)i)), nil)));
+    protect(callargs);
+    object *value = apply(function, callargs, env);
+    unprotect(); // callargs
+    unprotect(); // ssid
+    protect(value);
+    object *cell = cons(value, NULL);
+    unprotect(); // value
+    cdr(tail) = cell;
+    tail = cell;
+  }
+  object *result = cdr(head);
+  unprotect(); // head
+  return result;
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifistatus (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  return number(WiFi.status());
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifidebug (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  uint8_t status = WiFi.status();
+  object *result = nil;
+  result = alist_string("rssi", number(WiFi.RSSI()), result);
+  result = alist_string("ssid", lispstring((char *)WiFi.SSID().c_str()), result);
+  result = alist_string("local-ip", iptostring(WiFi.localIP()), result);
+  result = alist_string("status", lispstring((char *)wifi_status_name(status)), result);
+  result = alist_string("status-code", number(status), result);
+  return result;
   #else
   (void) args, (void) env;
   error2("not supported");

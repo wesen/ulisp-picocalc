@@ -4,6 +4,10 @@
 
 #include "ulisp_config.h"
 
+#if defined(ULISP_WIFI)
+#include <WiFi.h>
+#endif
+
 #if defined(sdcardsupport)
 #include <SD.h>
 #endif

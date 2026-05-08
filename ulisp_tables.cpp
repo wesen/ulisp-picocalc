@@ -264,6 +264,10 @@ const char string223[] = "wifi-softap";
 const char string224[] = "connected";
 const char string225[] = "wifi-localip";
 const char string226[] = "wifi-connect";
+const char string284[] = "wifi-scan";
+const char string285[] = "wifi-scan-map";
+const char string286[] = "wifi-status";
+const char string287[] = "wifi-debug";
 const char string227[] = "with-gfx";
 const char string228[] = "draw-pixel";
 const char string229[] = "draw-line";
@@ -315,6 +319,12 @@ const char string274[] = "set-window-colors";
 const char string275[] = "window-redraw";
 const char string276[] = "list-windows";
 const char string277[] = "focus-repl";
+const char string278[] = "http-server-start";
+const char string279[] = "http-server-stop";
+const char string280[] = "http-accept";
+const char string281[] = "http-respond";
+const char string282[] = "url-decode";
+const char string283[] = "html-escape";
 
 // Documentation strings
 const char doc0[] = "nil\n"
@@ -839,6 +849,14 @@ const char doc225[] = "(wifi-localip)\n"
 "Returns the IP address of the local network as a string.";
 const char doc226[] = "(wifi-connect [ssid pass])\n"
 "Connects to the Wi-Fi network ssid using password pass. It returns the IP address as a string.";
+const char doc268[] = "(wifi-scan)\n"
+"Scans for nearby Wi-Fi networks and returns a list of (ssid rssi encryption) entries.";
+const char doc269[] = "(wifi-scan-map function)\n"
+"Scans for nearby Wi-Fi networks and calls function with ssid, rssi, and encryption for each network. Returns a list of callback results.";
+const char doc270[] = "(wifi-status)\n"
+"Returns the numeric Wi-Fi status code from the Arduino-Pico WiFi library.";
+const char doc271[] = "(wifi-debug)\n"
+"Returns Wi-Fi diagnostic information as an alist: status code/name, local IP, SSID, RSSI, and scan count.";
 const char doc227[] = "(with-gfx (str) form*)\n"
 "Evaluates the forms with str bound to an gfx-stream so you can print text\n"
 "to the graphics display using the standard uLisp print commands.";
@@ -924,6 +942,18 @@ const char doc260[] = "(list-windows)\n"
 "Returns a list of currently active text window streams.";
 const char doc261[] = "(focus-repl)\n"
 "Moves window-manager focus back to the main REPL window.";
+const char doc262[] = "(http-server-start [port])\n"
+"Starts the cooperative Pico 2W HTTP POC server. Milestone 1 supports port 80 only.";
+const char doc263[] = "(http-server-stop)\n"
+"Stops the cooperative HTTP POC server and closes any active client.";
+const char doc264[] = "(http-accept)\n"
+"Polls the HTTP server once. Returns a request alist or nil without waiting indefinitely.";
+const char doc265[] = "(http-respond status content-type body [headers])\n"
+"Writes a complete HTTP response for the active request and closes the client. Headers is an alist of string pairs.";
+const char doc266[] = "(url-decode string)\n"
+"Decodes a URL component, converting + to space and %xx hex escapes to characters.";
+const char doc267[] = "(html-escape string)\n"
+"Escapes &, <, >, double quote, and single quote for safe HTML text or attribute output.";
 
 // Built-in symbol lookup table
 const tbl_entry_t lookup_table[] = {
@@ -1154,6 +1184,10 @@ const tbl_entry_t lookup_table[] = {
   { string224, fn_connected, 0211, doc224 },
   { string225, fn_wifilocalip, 0200, doc225 },
   { string226, fn_wificonnect, 0203, doc226 },
+  { string284, fn_wifiscan, 0200, doc268 },
+  { string285, fn_wifiscanmap, 0211, doc269 },
+  { string286, fn_wifistatus, 0200, doc270 },
+  { string287, fn_wifidebug, 0200, doc271 },
   { string227, sp_withgfx, 0317, doc227 },
   { string228, fn_drawpixel, 0223, doc228 },
   { string229, fn_drawline, 0245, doc229 },
@@ -1189,6 +1223,12 @@ const tbl_entry_t lookup_table[] = {
   { string275, fn_windowredraw, 0211, doc259 },
   { string276, fn_listwindows, 0200, doc260 },
   { string277, fn_focusrepl, 0200, doc261 },
+  { string278, fn_httpserverstart, 0201, doc262 },
+  { string279, fn_httpserverstop, 0200, doc263 },
+  { string280, fn_httpaccept, 0200, doc264 },
+  { string281, fn_httprespond, 0234, doc265 },
+  { string282, fn_urldecode, 0211, doc266 },
+  { string283, fn_htmlescape, 0211, doc267 },
   { string249, (fn_ptr_type)LED_BUILTIN, 0, NULL },
   { string250, (fn_ptr_type)HIGH, DIGITALWRITE, NULL },
   { string251, (fn_ptr_type)LOW, DIGITALWRITE, NULL },
