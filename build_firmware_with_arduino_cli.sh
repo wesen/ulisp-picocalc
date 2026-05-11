@@ -76,6 +76,10 @@ cp \
   "$SOURCE_DIR/ulisp_builtins_system.cpp" \
   "$SOURCE_DIR/ulisp_http.h" \
   "$SOURCE_DIR/ulisp_http.cpp" \
+  "$SOURCE_DIR/dhcpserver.c" \
+  "$SOURCE_DIR/dhcpserver.h" \
+  "$SOURCE_DIR/dnsserver.c" \
+  "$SOURCE_DIR/dnsserver.h" \
   "$SOURCE_DIR/ui/repl_window.h" \
   "$SOURCE_DIR/ui/repl_window.cpp" \
   "$SOURCE_DIR/ui/window.h" \

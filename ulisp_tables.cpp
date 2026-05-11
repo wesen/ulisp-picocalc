@@ -266,6 +266,10 @@ const char string225[] = "wifi-localip";
 const char string226[] = "wifi-connect";
 const char string284[] = "wifi-scan";
 const char string285[] = "wifi-scan-map";
+const char string288[] = "wifi-scan-start";
+const char string289[] = "wifi-scan-active";
+const char string290[] = "wifi-scan-results";
+const char string291[] = "wifi-scan-clear";
 const char string286[] = "wifi-status";
 const char string287[] = "wifi-debug";
 const char string227[] = "with-gfx";
@@ -850,9 +854,17 @@ const char doc225[] = "(wifi-localip)\n"
 const char doc226[] = "(wifi-connect [ssid pass])\n"
 "Connects to the Wi-Fi network ssid using password pass. It returns the IP address as a string.";
 const char doc268[] = "(wifi-scan)\n"
-"Scans for nearby Wi-Fi networks and returns a list of (ssid rssi encryption) entries.";
+"Returns the current async scan results, starting a scan first only if no scan has been started yet.";
 const char doc269[] = "(wifi-scan-map function)\n"
-"Scans for nearby Wi-Fi networks and calls function with ssid, rssi, and encryption for each network. Returns a list of callback results.";
+"Calls function with ssid, rssi, security, and channel for each currently buffered scan result. Returns a list of callback results.";
+const char doc272[] = "(wifi-scan-start [clear])\n"
+"Starts an asynchronous CYW43 Wi-Fi scan and returns the start result code. Clears old results unless clear is nil.";
+const char doc273[] = "(wifi-scan-active)\n"
+"Returns t while CYW43 reports a scan active, otherwise nil.";
+const char doc274[] = "(wifi-scan-results)\n"
+"Returns the currently buffered async scan results as (ssid rssi security channel) entries.";
+const char doc275[] = "(wifi-scan-clear)\n"
+"Clears buffered async scan results and scan bookkeeping.";
 const char doc270[] = "(wifi-status)\n"
 "Returns the numeric Wi-Fi status code from the Arduino-Pico WiFi library.";
 const char doc271[] = "(wifi-debug)\n"
@@ -1186,6 +1198,10 @@ const tbl_entry_t lookup_table[] = {
   { string226, fn_wificonnect, 0203, doc226 },
   { string284, fn_wifiscan, 0200, doc268 },
   { string285, fn_wifiscanmap, 0211, doc269 },
+  { string288, fn_wifiscanstart, 0201, doc272 },
+  { string289, fn_wifiscanactive, 0200, doc273 },
+  { string290, fn_wifiscanresults, 0200, doc274 },
+  { string291, fn_wifiscanclear, 0200, doc275 },
   { string286, fn_wifistatus, 0200, doc270 },
   { string287, fn_wifidebug, 0200, doc271 },
   { string227, sp_withgfx, 0317, doc227 },

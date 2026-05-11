@@ -98,6 +98,7 @@ void setup () {
   windowManager.focusReplWindow();
   initkybd();
   pfstring(PSTR("uLisp 4.8f "), pserial); pln(pserial);
+  pfstring(PSTR("Build: " __DATE__ " " __TIME__), pserial); pln(pserial);
 }
 
 void repl (object *env) {

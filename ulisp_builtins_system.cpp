@@ -1,6 +1,8 @@
 
 #include <Arduino.h>
 #include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
@@ -9,7 +11,14 @@
 #include "ulisp_config.h"
 
 #if defined(ULISP_WIFI)
-#include <WiFi.h>
+#include "pico/cyw43_arch.h"
+#include "lwip/dhcp.h"
+#include "lwip/ip4_addr.h"
+#include "lwip/netif.h"
+extern "C" {
+#include "dhcpserver.h"
+#include "dnsserver.h"
+}
 #endif
 
 #if defined(sdcardsupport)
@@ -57,8 +66,19 @@ extern const char indexrange[];
 extern const char unknownstreamtype[];
 
 #if defined(ULISP_WIFI)
-extern WiFiClient client;
-extern WiFiServer server;
+namespace {
+constexpr uint32_t kWifiConnectTimeoutMs = 60000;
+extern bool WifiApRunning;
+extern dhcp_server_t WifiDhcpServer;
+extern dns_server_t WifiDnsServer;
+extern ip4_addr_t WifiApGw;
+static void wifi_debugf(const char *fmt, ...);
+static void wifi_set_trace(bool enabled);
+static void wifi_log_state(const char *prefix);
+static void ip4_to_cstr(const ip4_addr_t *addr, char *buffer, size_t len);
+static object *ip4_to_lisp(const ip4_addr_t *addr);
+static void wifi_stop_ap();
+}
 #endif
 
 // System functions
@@ -561,80 +581,55 @@ object *fn_directory (object *args, object *env) {
 // Wi-Fi
 
 object *sp_withclient (object *args, object *env) {
-  #if defined(ULISP_WIFI)
-  object *params = checkarguments(args, 1, 3);
-  object *var = first(params);
-  char buffer[BUFFERSIZE];
-  params = cdr(params);
-  int n;
-  if (params == NULL) {
-    client = server.accept();
-    if (!client) return nil;
-    n = 2;
-  } else {
-    object *address = eval(first(params), env);
-    object *port = eval(second(params), env);
-    int success;
-    if (stringp(address)) success = client.connect(cstring(address, buffer, BUFFERSIZE), checkinteger(port));
-    else if (integerp(address)) success = client.connect(address->integer, checkinteger(port));
-    else error2("invalid address");
-    if (!success) return nil;
-    n = 1;
-  }
-  object *pair = cons(var, stream(WIFISTREAM, n));
-  push(pair,env);
-  object *forms = cdr(args);
-  object *result = eval(tf_progn(forms,env), env);
-  client.stop();
-  return result;
-  #else
   (void) args, (void) env;
-  error2("not supported");
+  error2("wifi streams disabled");
   return nil;
-  #endif
 }
 
 object *fn_available (object *args, object *env) {
-  #if defined (ULISP_WIFI)
-  (void) env;
-  if (isstream(first(args))>>8 != WIFISTREAM) error2("invalid stream");
-  return number(client.available());
-  #else
   (void) args, (void) env;
-  error2("not supported");
+  error2("wifi streams disabled");
   return nil;
-  #endif
 }
 
 object *fn_wifiserver (object *args, object *env) {
-  #if defined (ULISP_WIFI)
   (void) args, (void) env;
-  server.begin();
+  error2("wifi streams disabled");
   return nil;
-  #else
-  (void) args, (void) env;
-  error2("not supported");
-  return nil;
-  #endif
 }
 
 object *fn_wifisoftap (object *args, object *env) {
   #if defined (ULISP_WIFI)
   (void) env;
   char ssid[33], pass[65];
-  object *first = first(args); args = cdr(args);
-  if (args == NULL) WiFi.beginAP(cstring(first, ssid, 33));
-  else {
-    object *second = first(args);
-    args = cdr(args);
-    int channel = 1;
-    if (args != NULL) {
-      channel = checkinteger(first(args));
-      args = cdr(args);
-    }
-    WiFi.beginAP(cstring(first, ssid, 33), cstring(second, pass, 65), channel);
+  object *ssid_arg = first(args);
+  object *pass_arg = second(args);
+  wifi_stop_ap();
+  const char *pass_cstr = nullptr;
+  uint32_t auth = CYW43_AUTH_OPEN;
+  if (pass_arg != NULL && pass_arg != nil) {
+    pass_cstr = cstring(pass_arg, pass, sizeof(pass));
+    if (strlen(pass_cstr) >= 8) auth = CYW43_AUTH_WPA2_AES_PSK;
+    else pass_cstr = nullptr;
   }
-  return iptostring(WiFi.localIP());
+  wifi_debugf("softap ssid='%s' auth=%s\n", cstring(ssid_arg, ssid, sizeof(ssid)), auth == CYW43_AUTH_OPEN ? "open" : "wpa2-aes");
+  cyw43_arch_enable_ap_mode(ssid, pass_cstr, auth);
+#if LWIP_IPV6
+#define ULISP_IP4(x) ((x).u_addr.ip4)
+#else
+#define ULISP_IP4(x) (x)
+#endif
+  ip4_addr_t mask;
+  ULISP_IP4(WifiApGw).addr = PP_HTONL(CYW43_DEFAULT_IP_AP_ADDRESS);
+  ULISP_IP4(mask).addr = PP_HTONL(CYW43_DEFAULT_IP_MASK);
+#undef ULISP_IP4
+  dhcp_server_init(&WifiDhcpServer, &WifiApGw, &mask);
+  dns_server_init(&WifiDnsServer, &WifiApGw);
+  WifiApRunning = true;
+  char ap_ip[16];
+  ip4_to_cstr(&WifiApGw, ap_ip, sizeof(ap_ip));
+  wifi_debugf("softap ip=%s dhcp=on dns=on\n", ap_ip);
+  return ip4_to_lisp(&WifiApGw);
   #else
   (void) args, (void) env;
   error2("not supported");
@@ -643,21 +638,15 @@ object *fn_wifisoftap (object *args, object *env) {
 }
 
 object *fn_connected (object *args, object *env) {
-  #if defined (ULISP_WIFI)
-  (void) env;
-  if (isstream(first(args))>>8 != WIFISTREAM) error2("invalid stream");
-  return client.connected() ? tee : nil;
-  #else
   (void) args, (void) env;
-  error2("not supported");
+  error2("wifi streams disabled");
   return nil;
-  #endif
 }
 
 object *fn_wifilocalip (object *args, object *env) {
   #if defined (ULISP_WIFI)
   (void) args, (void) env;
-  return iptostring(WiFi.localIP());
+  return ip4_to_lisp(netif_ip4_addr(&cyw43_state.netif[CYW43_ITF_STA]));
   #else
   (void) args, (void) env;
   error2("not supported");
@@ -669,16 +658,23 @@ object *fn_wificonnect (object *args, object *env) {
   #if defined (ULISP_WIFI)
   (void) env;
   char ssid[33], pass[65];
-  int result = 0;
-  if (args == NULL) { WiFi.disconnect(); return nil; }
-  if (cdr(args) == NULL) result = WiFi.begin(cstring(first(args), ssid, 33));
-  else {
-    if (cddr(args) != NULL) WiFi.config(ipstring(third(args)));
-    result = WiFi.begin(cstring(first(args), ssid, 33), cstring(second(args), pass, 65));
-  }
-  if (result == WL_CONNECTED) return iptostring(WiFi.localIP());
-  else if (result == WL_NO_SSID_AVAIL) error2("network not found");
-  else if (result == WL_CONNECT_FAILED) error2("connection failed");
+  if (args == NULL) { wifi_debugf("disconnect requested\n"); cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA); return nil; }
+  cyw43_arch_enable_sta_mode();
+  wifi_set_trace(true);
+  wifi_log_state("connect-before");
+  uint32_t auth = CYW43_AUTH_WPA2_AES_PSK;
+  const char *pass_cstr = "";
+  if (cdr(args) == NULL) auth = CYW43_AUTH_OPEN;
+  else pass_cstr = cstring(second(args), pass, sizeof(pass));
+  wifi_debugf("connecting ssid='%s' auth=%s timeout=%lums\n", cstring(first(args), ssid, sizeof(ssid)), auth == CYW43_AUTH_OPEN ? "open" : "wpa2-aes", (unsigned long)kWifiConnectTimeoutMs);
+  int result = cyw43_arch_wifi_connect_timeout_ms(ssid, pass_cstr, auth, kWifiConnectTimeoutMs);
+  wifi_debugf("connect result=%d\n", result);
+  wifi_log_state("connect-after");
+  wifi_set_trace(false);
+  if (result == PICO_OK) return ip4_to_lisp(netif_ip4_addr(&cyw43_state.netif[CYW43_ITF_STA]));
+  if (cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_JOIN) error2("connected but no ip");
+  else if (cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_BADAUTH) error2("bad authentication");
+  else if (cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_NONET) error2("network not found");
   else error2("unable to connect");
   return nil;
   #else
@@ -689,38 +685,266 @@ object *fn_wificonnect (object *args, object *env) {
 }
 
 #if defined(ULISP_WIFI)
-static const char *wifi_status_name(uint8_t status) {
+namespace {
+constexpr size_t kWifiMaxScanResults = 32;
+constexpr uint32_t kWifiScanTimeoutMs = 30000;
+
+struct WifiScanResult {
+  char ssid[33];
+  int16_t rssi;
+  uint8_t channel;
+  uint8_t security;
+  uint8_t bssid[6];
+};
+
+WifiScanResult WifiScanResults[kWifiMaxScanResults];
+static object *wifi_scan_entry(const WifiScanResult &r);
+volatile size_t WifiScanCount = 0;
+bool WifiScanEverStarted = false;
+int WifiLastScanStartResult = 0;
+bool WifiApRunning = false;
+bool WifiTraceEnabled = false;
+dhcp_server_t WifiDhcpServer;
+dns_server_t WifiDnsServer;
+ip4_addr_t WifiApGw;
+
+static uint32_t wifi_now_ms() {
+  return to_ms_since_boot(get_absolute_time());
+}
+
+static void wifi_debugf(const char *fmt, ...) {
+  char message[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(message, sizeof(message), fmt, args);
+  va_end(args);
+  Serial.printf("[%10lu ms] wifi: ", (unsigned long)wifi_now_ms());
+  for (char *p = message; *p; p++) {
+    if (*p == '\n') Serial.write('\r');
+    Serial.write(*p);
+  }
+}
+
+static void wifi_set_trace(bool enabled) {
+  WifiTraceEnabled = enabled;
+  if (enabled) cyw43_state.trace_flags |= CYW43_TRACE_ASYNC_EV;
+  else cyw43_state.trace_flags &= ~CYW43_TRACE_ASYNC_EV;
+  wifi_debugf("async trace %s\n", enabled ? "on" : "off");
+}
+
+static void wifi_clear_reader_pushback(const char *where) {
+  if (LastChar) {
+    wifi_debugf("clearing reader pushback at %s char=0x%02x\n", where, (unsigned char)LastChar);
+    LastChar = 0;
+  }
+}
+
+static void ip4_to_cstr(const ip4_addr_t *addr, char *buffer, size_t len) {
+  ip4addr_ntoa_r(addr, buffer, (int)len);
+}
+
+static object *ip4_to_lisp(const ip4_addr_t *addr) {
+  char buffer[16];
+  ip4_to_cstr(addr, buffer, sizeof(buffer));
+  return lispstring(buffer);
+}
+
+static const char *wifi_link_status_name(int status) {
   switch (status) {
-    case WL_IDLE_STATUS: return "idle";
-    case WL_NO_SSID_AVAIL: return "no-ssid";
-    case WL_SCAN_COMPLETED: return "scan-completed";
-    case WL_CONNECTED: return "connected";
-    case WL_CONNECT_FAILED: return "connect-failed";
-    case WL_CONNECTION_LOST: return "connection-lost";
-    case WL_DISCONNECTED: return "disconnected";
+    case CYW43_LINK_DOWN: return "down";
+    case CYW43_LINK_JOIN: return "joined";
+    case CYW43_LINK_NOIP: return "no-ip";
+    case CYW43_LINK_UP: return "up";
+    case CYW43_LINK_FAIL: return "fail";
+    case CYW43_LINK_NONET: return "no-net";
+    case CYW43_LINK_BADAUTH: return "bad-auth";
     default: return "unknown";
   }
 }
 
-static object *wifi_scan_entry(int i) {
-  object *ssid = lispstring((char *)WiFi.SSID((uint8_t)i));
-  object *entry = cons(ssid, cons(number(WiFi.RSSI((uint8_t)i)), cons(number(WiFi.encryptionType((uint8_t)i)), nil)));
-  return entry;
+static const char *wifi_scan_security_name(uint8_t security) {
+  switch (security) {
+    case 0: return "open";
+    case 1: return "wep/privacy";
+    case 2: return "wpa";
+    case 3: return "wpa+wep/privacy";
+    case 4: return "wpa2";
+    case 5: return "wpa2+privacy";
+    case 6: return "wpa+wpa2";
+    case 7: return "wpa+wpa2+privacy";
+    default: return "unknown";
+  }
+}
+
+static const char *wifi_dhcp_state_name(int state) {
+  switch (state) {
+    case -1: return "none";
+    case 0: return "off";
+    case 1: return "requesting";
+    case 2: return "init";
+    case 3: return "rebooting";
+    case 4: return "rebinding";
+    case 5: return "renewing";
+    case 6: return "selecting";
+    case 7: return "informing";
+    case 8: return "checking";
+    case 9: return "bound";
+    case 10: return "backing-off";
+    default: return "unknown";
+  }
 }
 
 static object *alist_string(const char *key, object *value, object *tail) {
   return cons(cons(lispstring((char *)key), value), tail);
 }
+
+static int wifi_scan_callback(void *, const cyw43_ev_scan_result_t *result) {
+  if (!result) return 0;
+  wifi_debugf("scan result ssid='%s' rssi=%d chan=%u sec=%u(%s) bssid=%02x:%02x:%02x:%02x:%02x:%02x\n",
+              result->ssid, result->rssi, result->channel, result->auth_mode,
+              wifi_scan_security_name(result->auth_mode),
+              result->bssid[0], result->bssid[1], result->bssid[2], result->bssid[3], result->bssid[4], result->bssid[5]);
+  size_t index = WifiScanCount;
+  if (index >= kWifiMaxScanResults) return 0;
+  WifiScanCount = index + 1;
+  WifiScanResult &out = WifiScanResults[index];
+  strncpy(out.ssid, (const char *)result->ssid, sizeof(out.ssid) - 1);
+  out.ssid[sizeof(out.ssid) - 1] = '\0';
+  out.rssi = result->rssi;
+  out.channel = result->channel;
+  out.security = result->auth_mode;
+  memcpy(out.bssid, result->bssid, sizeof(out.bssid));
+  return 0;
+}
+
+static int wifi_start_scan(bool clear_results) {
+  wifi_clear_reader_pushback("scan-start-entry");
+  wifi_debugf("scan-start requested clear=%d active=%d count=%u\n", clear_results ? 1 : 0, cyw43_wifi_scan_active(&cyw43_state) ? 1 : 0, (unsigned)WifiScanCount);
+  cyw43_arch_enable_sta_mode();
+  if (clear_results) WifiScanCount = 0;
+  cyw43_wifi_scan_options_t options{};
+  if (cyw43_wifi_scan_active(&cyw43_state)) {
+    wifi_debugf("scan already active; kicking CYW43 scan path to flush callbacks\n");
+  }
+  WifiLastScanStartResult = cyw43_wifi_scan(&cyw43_state, &options, nullptr, wifi_scan_callback);
+  WifiScanEverStarted = (WifiLastScanStartResult == 0);
+  wifi_debugf("scan-start result=%d active=%d\n", WifiLastScanStartResult, cyw43_wifi_scan_active(&cyw43_state) ? 1 : 0);
+  wifi_clear_reader_pushback("scan-start-exit");
+  return WifiLastScanStartResult;
+}
+
+static object *wifi_results_list() {
+  size_t n = WifiScanCount;
+  object *result = nil;
+  for (int i = (int)n - 1; i >= 0; i--) result = cons(wifi_scan_entry(WifiScanResults[i]), result);
+  return result;
+}
+
+static void wifi_stop_ap() {
+  if (!WifiApRunning) return;
+  wifi_debugf("stopping softap\n");
+  dns_server_deinit(&WifiDnsServer);
+  dhcp_server_deinit(&WifiDhcpServer);
+  cyw43_arch_disable_ap_mode();
+  WifiApRunning = false;
+}
+
+static void wifi_log_state(const char *prefix) {
+  netif *sta = &cyw43_state.netif[CYW43_ITF_STA];
+  int wifi_status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+  int tcpip_status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
+#if LWIP_DHCP
+  dhcp *dhcp_state = netif_dhcp_data(sta);
+  int dhcp_state_num = dhcp_state ? dhcp_state->state : -1;
+  int dhcp_tries = dhcp_state ? dhcp_state->tries : -1;
+#else
+  int dhcp_state_num = -1;
+  int dhcp_tries = -1;
+#endif
+  int32_t rssi = 0;
+  int rssi_err = cyw43_wifi_get_rssi(&cyw43_state, &rssi);
+  char ip[16], gw[16], mask[16];
+  ip4_to_cstr(netif_ip4_addr(sta), ip, sizeof(ip));
+  ip4_to_cstr(netif_ip4_gw(sta), gw, sizeof(gw));
+  ip4_to_cstr(netif_ip4_netmask(sta), mask, sizeof(mask));
+  wifi_debugf("%s wifi=%d(%s) tcpip=%d(%s) netif-up=%d link-up=%d dhcp=%d(%s) tries=%d ip=%s gw=%s mask=%s rssi=%ld%s\n",
+              prefix,
+              wifi_status, wifi_link_status_name(wifi_status),
+              tcpip_status, wifi_link_status_name(tcpip_status),
+              netif_is_up(sta) ? 1 : 0,
+              netif_is_link_up(sta) ? 1 : 0,
+              dhcp_state_num, wifi_dhcp_state_name(dhcp_state_num), dhcp_tries,
+              ip, gw, mask, (long)rssi, rssi_err ? "(unavailable)" : "");
+}
+
+static object *wifi_scan_entry(const WifiScanResult &r) {
+  object *ssid = lispstring((char *)r.ssid);
+  object *entry = cons(ssid, cons(number(r.rssi), cons(number(r.security), cons(number(r.channel), nil))));
+  return entry;
+}
+} // namespace
 #endif
 
 object *fn_wifiscan (object *args, object *env) {
   #if defined(ULISP_WIFI)
   (void) args, (void) env;
-  int n = WiFi.scanNetworks();
-  if (n < 0) return number(n);
-  object *result = nil;
-  for (int i = n - 1; i >= 0; i--) result = cons(wifi_scan_entry(i), result);
-  return result;
+  if (!WifiScanEverStarted && WifiScanCount == 0) wifi_start_scan(true);
+  wifi_clear_reader_pushback("wifi-scan-return");
+  return wifi_results_list();
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifiscanstart (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) env;
+  bool clear_results = (args == NULL || first(args) != nil);
+  return number(wifi_start_scan(clear_results));
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifiscanactive (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  cyw43_arch_poll();
+  bool active = cyw43_wifi_scan_active(&cyw43_state);
+  wifi_debugf("scan-active active=%d count=%u last-start=%d\n", active ? 1 : 0, (unsigned)WifiScanCount, WifiLastScanStartResult);
+  return active ? tee : nil;
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifiscanresults (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  wifi_debugf("scan-results count=%u active=%d\n", (unsigned)WifiScanCount, cyw43_wifi_scan_active(&cyw43_state) ? 1 : 0);
+  wifi_clear_reader_pushback("wifi-scan-results-return");
+  return wifi_results_list();
+  #else
+  (void) args, (void) env;
+  error2("not supported");
+  return nil;
+  #endif
+}
+
+object *fn_wifiscanclear (object *args, object *env) {
+  #if defined(ULISP_WIFI)
+  (void) args, (void) env;
+  WifiScanCount = 0;
+  WifiScanEverStarted = false;
+  WifiLastScanStartResult = 0;
+  wifi_debugf("scan-clear\n");
+  return nil;
   #else
   (void) args, (void) env;
   error2("not supported");
@@ -731,15 +955,15 @@ object *fn_wifiscan (object *args, object *env) {
 object *fn_wifiscanmap (object *args, object *env) {
   #if defined(ULISP_WIFI)
   object *function = first(args);
-  int n = WiFi.scanNetworks();
-  if (n < 0) return number(n);
+  size_t n = WifiScanCount;
   object *head = cons(NULL, NULL);
   protect(head);
   object *tail = head;
   for (int i = 0; i < n; i++) {
-    object *ssid = lispstring((char *)WiFi.SSID((uint8_t)i));
+    WifiScanResult &r = WifiScanResults[i];
+    object *ssid = lispstring((char *)r.ssid);
     protect(ssid);
-    object *callargs = cons(ssid, cons(number(WiFi.RSSI((uint8_t)i)), cons(number(WiFi.encryptionType((uint8_t)i)), nil)));
+    object *callargs = cons(ssid, cons(number(r.rssi), cons(number(r.security), cons(number(r.channel), nil))));
     protect(callargs);
     object *value = apply(function, callargs, env);
     unprotect(); // callargs
@@ -752,6 +976,7 @@ object *fn_wifiscanmap (object *args, object *env) {
   }
   object *result = cdr(head);
   unprotect(); // head
+  wifi_clear_reader_pushback("wifi-scan-map-return");
   return result;
   #else
   (void) args, (void) env;
@@ -763,7 +988,7 @@ object *fn_wifiscanmap (object *args, object *env) {
 object *fn_wifistatus (object *args, object *env) {
   #if defined(ULISP_WIFI)
   (void) args, (void) env;
-  return number(WiFi.status());
+  return number(cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA));
   #else
   (void) args, (void) env;
   error2("not supported");
@@ -774,13 +999,31 @@ object *fn_wifistatus (object *args, object *env) {
 object *fn_wifidebug (object *args, object *env) {
   #if defined(ULISP_WIFI)
   (void) args, (void) env;
-  uint8_t status = WiFi.status();
+  netif *sta = &cyw43_state.netif[CYW43_ITF_STA];
+  int wifi_status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+  int tcpip_status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
+  int32_t rssi = 0;
+  int rssi_err = cyw43_wifi_get_rssi(&cyw43_state, &rssi);
+#if LWIP_DHCP
+  dhcp *dhcp_state = netif_dhcp_data(sta);
+  int dhcp_state_num = dhcp_state ? dhcp_state->state : -1;
+  int dhcp_tries = dhcp_state ? dhcp_state->tries : -1;
+#else
+  int dhcp_state_num = -1;
+  int dhcp_tries = -1;
+#endif
   object *result = nil;
-  result = alist_string("rssi", number(WiFi.RSSI()), result);
-  result = alist_string("ssid", lispstring((char *)WiFi.SSID().c_str()), result);
-  result = alist_string("local-ip", iptostring(WiFi.localIP()), result);
-  result = alist_string("status", lispstring((char *)wifi_status_name(status)), result);
-  result = alist_string("status-code", number(status), result);
+  result = alist_string("rssi", rssi_err == 0 ? number(rssi) : nil, result);
+  result = alist_string("netmask", ip4_to_lisp(netif_ip4_netmask(sta)), result);
+  result = alist_string("gateway", ip4_to_lisp(netif_ip4_gw(sta)), result);
+  result = alist_string("local-ip", ip4_to_lisp(netif_ip4_addr(sta)), result);
+  result = alist_string("dhcp-tries", number(dhcp_tries), result);
+  result = alist_string("dhcp-state", lispstring((char *)wifi_dhcp_state_name(dhcp_state_num)), result);
+  result = alist_string("dhcp-state-code", number(dhcp_state_num), result);
+  result = alist_string("tcpip-status", lispstring((char *)wifi_link_status_name(tcpip_status)), result);
+  result = alist_string("tcpip-status-code", number(tcpip_status), result);
+  result = alist_string("wifi-status", lispstring((char *)wifi_link_status_name(wifi_status)), result);
+  result = alist_string("wifi-status-code", number(wifi_status), result);
   return result;
   #else
   (void) args, (void) env;

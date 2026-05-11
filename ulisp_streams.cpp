@@ -4,9 +4,6 @@
 
 #include "ulisp_config.h"
 
-#if defined(ULISP_WIFI)
-#include <WiFi.h>
-#endif
 
 #if defined(sdcardsupport)
 #include <SD.h>
@@ -127,9 +124,7 @@ File SDpfile, SDgfile;
 void SDwrite (char c) { SDpfile.write(uint8_t(c)); } // Fix for RP2040
 #endif
 #if defined(ULISP_WIFI)
-WiFiClient client;
-WiFiServer server(80);
-void WiFiwrite (char c) { client.write(c); }
+void WiFiwrite (char c) { (void)c; }
 #endif
 #if defined(gfxsupport)
 void gfxwrite (char c) { tft.write(c); }
@@ -157,7 +152,7 @@ int SDread () { return SDgfile.read(); }
 #endif
 
 #if defined(ULISP_WIFI)
-int WiFiread () { while (!client.available()) testescape(); return client.read(); }
+int WiFiread () { error2("wifi streams disabled"); return -1; }
 #endif
 
 void serialbegin (int address, int baud) {

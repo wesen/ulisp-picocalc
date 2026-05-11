@@ -1,8 +1,8 @@
 // ulisp_http.cpp — cooperative HTTP/1.x POC primitives for Pico 2W.
 //
-// Milestone 1 intentionally uses Arduino-Pico WiFiServer/WiFiClient only as a
-// byte transport.  The HTTP parser and response writer are bounded, avoid
-// Arduino String, and never wait indefinitely for network input.
+// The old Arduino-Pico WiFiServer/WiFiClient transport is intentionally
+// compiled out while the Wi-Fi stack is being ported to direct CYW43/lwIP.
+// The bounded parser below is kept for the upcoming raw-lwIP HTTP transport.
 
 #include <Arduino.h>
 #include <ctype.h>
@@ -11,9 +11,6 @@
 
 #include "ulisp_config.h"
 
-#if defined(ULISP_WIFI)
-#include <WiFi.h>
-#endif
 
 #include "ulisp_types.h"
 #include "ulisp_error.h"
@@ -31,7 +28,7 @@ constexpr size_t kWriteChunkSize = 64;
 constexpr unsigned long kParseBudgetMs = 25;
 constexpr unsigned long kClientTimeoutMs = 2000;
 
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
 WiFiServer HttpServer(kHttpPort);
 WiFiClient HttpClient;
 bool HttpServerEnabled = false;
@@ -77,7 +74,7 @@ void lower_ascii(char *s) {
   }
 }
 
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
 void close_active_client() {
   if (HttpClientActive) HttpClient.stop(100);
   HttpClient = WiFiClient();
@@ -297,7 +294,7 @@ object *transform_string(object *arg, bool html_escape) {
 
 object *fn_httpserverstart(object *args, object *env) {
   (void)env;
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
   if (args != NULL) {
     int port = checkinteger(first(args));
     if (port != kHttpPort) error2("only port 80 supported");
@@ -317,7 +314,7 @@ object *fn_httpserverstart(object *args, object *env) {
 object *fn_httpserverstop(object *args, object *env) {
   (void)args;
   (void)env;
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
   close_active_client();
   HttpServer.stop();
   HttpServerEnabled = false;
@@ -328,7 +325,7 @@ object *fn_httpserverstop(object *args, object *env) {
 object *fn_httpaccept(object *args, object *env) {
   (void)args;
   (void)env;
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
   if (!HttpServerEnabled || HttpAwaitingResponse) return nil;
 
   if (!HttpClientActive) {
@@ -378,7 +375,7 @@ object *fn_httpaccept(object *args, object *env) {
 
 object *fn_httprespond(object *args, object *env) {
   (void)env;
-#if defined(ULISP_WIFI)
+#if defined(ULISP_WIFI) && defined(ULISP_HTTP_ARDUINO_TRANSPORT)
   if (!HttpClientActive || !HttpAwaitingResponse) error2("no active http request");
 
   int status = checkinteger(first(args));
